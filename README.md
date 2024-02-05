@@ -7,7 +7,7 @@ A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 - PySpark: 3.5.0
 - Delta Spark: 3.1.0
 
-# Windows Notes:
+# Non ARM based processors:
 Please change de Dockerfile for the base processor that you are using,
 arm64 is used on ARM based processors.
 ```
