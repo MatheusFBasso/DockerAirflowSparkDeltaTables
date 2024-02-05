@@ -1,32 +1,36 @@
 from ..utils.utils import Now, DeltaSpark, bronze_path_raw_data, bronze_path_bkp_raw_data
 from pyspark.sql.functions import lit, col, when, concat, trim, lower, initcap, upper, udf, regexp_replace
-from pyspark.sql.types import StringType, FloatType, StructType, StructField
+from pyspark.sql.types import StringType, FloatType, StructType, StructField, DateType
 from datetime import datetime, timedelta
 import shutil
 import os
 from glob import glob
+
+# TODO: Revisar código em busca de melhorias e otimizações no processamento
+# TODO: Adicionar tabela de log com as informações resumidas sobre o processamento da camada
 
 
 class BrewerySilver(Now):
 
     _SHOW_LOG = True
     _SCHEMA_RAW_DATA = StructType([
-        StructField('id', StringType(), False),
-        StructField('name', StringType(), True),
-        StructField('brewery_type', StringType(), True),
-        StructField('address_1', StringType(), True),
-        StructField('address_2', StringType(), True),
-        StructField('address_3', StringType(), True),
-        StructField('city', StringType(), True),
+        StructField('id',             StringType(), False),
+        StructField('name',           StringType(), True),
+        StructField('brewery_type',   StringType(), True),
+        StructField('address_1',      StringType(), True),
+        StructField('address_2',      StringType(), True),
+        StructField('address_3',      StringType(), True),
+        StructField('city',           StringType(), True),
         StructField('state_province', StringType(), True),
-        StructField('postal_code', StringType(), True),
-        StructField('country', StringType(), True),
-        StructField('longitude', StringType(), True),
-        StructField('latitude', StringType(), True),
-        StructField('phone', StringType(), True),
-        StructField('website_url', StringType(), True),
-        StructField('state', StringType(), True),
-        StructField('street', StringType(), True),
+        StructField('postal_code',    StringType(), True),
+        StructField('country',        StringType(), True),
+        StructField('longitude',      StringType(), True),
+        StructField('latitude',       StringType(), True),
+        StructField('phone',          StringType(), True),
+        StructField('website_url',    StringType(), True),
+        StructField('state',          StringType(), True),
+        StructField('street',         StringType(), True),
+        StructField('date_ref_carga',   DateType(), False),
     ])
     _TODAY_FORMATED = datetime(datetime.now().year, datetime.now().month, datetime.now().day).strftime("%Y_%m_%d")
 
@@ -88,7 +92,7 @@ class BrewerySilver(Now):
 
         self.log_message(show=self._SHOW_LOG, message='[LOAD] | [BRONZE] | BACKUP FILES MOVED SUCCESSFULLY')
 
-    def _delete_folder(self, folder_path: str, root_name: str, days: str = 1):
+    def _delete_folder(self, folder_path: str, root_name: str, days: str = 7):
         """
         Deletes a folder and all its contents.
 
@@ -205,22 +209,28 @@ class BrewerySilver(Now):
 
         spark.sql("""
         CREATE TABLE IF NOT EXISTS silver.brewery (
-        brewery_type STRING,
-        city         STRING,
-        country      STRING,
-        id           STRING NOT NULL,
-        latitude     FLOAT ,
-        longitude    FLOAT ,
-        name         STRING,
-        phone        STRING,
-        postal_code  STRING,
-        state        STRING,
-        street       STRING,
-        website_url  STRING,
-        address      STRING
+        brewery_type   STRING,
+        city           STRING,
+        country        STRING,
+        id             STRING NOT NULL,
+        latitude       FLOAT ,
+        longitude      FLOAT ,
+        name           STRING,
+        phone          STRING,
+        postal_code    STRING,
+        state          STRING,
+        street         STRING,
+        website_url    STRING,
+        address        STRING,
+        date_ref_carga DATE NOT NULL
         )
         USING DELTA
+        PARTITIONED BY (date_ref_carga)
         """)
+
+        lit_date = datetime.strptime(Now().now(), "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d')
+        df = df.withColumn("date_ref_carga", lit(lit_date).cast(DateType()))
+        del lit_date
 
         df.write\
           .format('delta')\

@@ -3,8 +3,8 @@ from pyspark.sql.functions import monotonically_increasing_id, when
 
 
 class BreweryGold(Now):
-
     _SHOW_LOG = True
+    _DICT_GOLD_APPEND = {'city': 0, 'state': 0, 'country': 0}
 
     def __init__(self, auto_set_tables: bool = True):
         super().__init__()
@@ -13,19 +13,19 @@ class BreweryGold(Now):
         self._create_tables = None
 
         self.country_max_PK = self.spark.sql("""
-                                                SELECT COALESCE(MAX(PK), 0) AS PK 
-                                                FROM gold.gold_D_Brewery_country
-                                             """).collect()[0][0]
+        SELECT COALESCE(MAX(PK), 0) AS PK 
+        FROM gold.gold_D_Brewery_country
+        """).collect()[0][0]
 
         self.state_max_PK = self.spark.sql("""
-                                                SELECT COALESCE(MAX(PK), 0) AS PK 
-                                                FROM gold.gold_D_Brewery_state
-                                           """).collect()[0][0]
+        SELECT COALESCE(MAX(PK), 0) AS PK
+        FROM gold.gold_D_Brewery_state
+        """).collect()[0][0]
 
         self.city_max_PK = city_max_PK = self.spark.sql("""
-                                                            SELECT COALESCE(MAX(PK), 0) AS PK 
-                                                            FROM gold.gold_D_Brewery_city
-                                                        """).collect()[0][0]
+        SELECT COALESCE(MAX(PK), 0) AS PK
+        FROM gold.gold_D_Brewery_city
+        """).collect()[0][0]
 
     @property
     def _set_tables(self):
@@ -104,9 +104,6 @@ class BreweryGold(Now):
             dim_table_name = dict_dims.get(Dim_table)[1]
             pk_range = dict_dims.get(Dim_table)[2]
 
-            if self._SHOW_LOG: print(
-                """{} | [TRANSFORM] | [GOLD] | UPDATING DIM TABLE gold.{}""".format(self.now(), Dim_table))
-
             self.log_message(show=self._SHOW_LOG,
                              message="""[TRANSFORM] | [GOLD] | UPDATING DIM TABLE gold.{}""".format(Dim_table),
                              start=True)
@@ -124,6 +121,9 @@ class BreweryGold(Now):
                 max_pk if max_pk > 0 else pk_range)).select('PK', Dim_table)
 
             temp_view.createTempView("temp_view_for_Dim_tables")
+            _count_to_dict = temp_view.count()
+            print(f'{Dim_table}: {_count_to_dict} to be inserted')
+            self._DICT_GOLD_APPEND[Dim_table] = _count_to_dict
 
             query = f"""
             INSERT INTO {dim_table_name}
@@ -142,7 +142,10 @@ class BreweryGold(Now):
             # WHEN NOT MATCHED BY TARGET THEN INSERT (TARGET.PK, TARGET.{Dim_table}) VALUES (SOURCE.PK, SOURCE.{Dim_table});
             # """
             #
-            self.spark.sql(query)
+            if _count_to_dict > 0:
+                self.spark.sql(query)
+
+            print(self._DICT_GOLD_APPEND)
 
             self.spark.catalog.dropTempView("temp_view_for_Dim_tables")
             del max_pk, dim_table_name, pk_range, temp_view, query
@@ -152,6 +155,8 @@ class BreweryGold(Now):
                              end=True)
 
     def merge(self, df_main, df_upd, df_main_key, df_upd_key):
+
+        self.log_message(show=self._SHOW_LOG, message="""[TRANSFORM] | [GOLD] | STATING MERGE""", start=True)
 
         # Generates a list with the name of the columns present in the dataframe
         df_main_cols = df_main.columns
@@ -172,12 +177,14 @@ class BreweryGold(Now):
         # Selecting only the columns of df_main (or all columns that do not have the suffix "_tmp")
         df_final = df_join.select(*df_main_cols)
 
+        self.log_message(show=self._SHOW_LOG, message="""[TRANSFORM] | [GOLD] | STATING MERGE | OK""", end=True)
+
         # Returns the dataframe updated with the merge
         return df_final
 
     def execute(self):
 
-        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [SILVER] | STARTING',
+        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | STARTING',
                          start=True, end=True, sep='=')
 
         dict_dims = {
@@ -188,55 +195,66 @@ class BreweryGold(Now):
 
         self.silver_to_olap(temp_view_name='silver.brewery', dict_dims=dict_dims)
 
-        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | UPDATING FACT TABLE', start=True)
+        if self._DICT_GOLD_APPEND.get('country') == 0 \
+                and self._DICT_GOLD_APPEND.get('state') == 0 \
+                and self._DICT_GOLD_APPEND.get('city') == 0:
 
-        temp = self.spark.sql("""
-        SELECT FACT.id            AS id,
-               FACT.name          AS name,
-               FACT.brewery_type  AS brewery_type,
-               FACT.latitude      AS latitude,
-               FACT.longitude     AS longitude,
-               FACT.phone         AS phone,
-               FACT.website_url   AS website_url,
-               FACT.address       AS address,
-               DIM_COUNTRY.PK     AS p_country,
-               DIM_STATE.PK       AS p_state,
-               DIM_CITY.PK        AS p_city   
+            self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | UPDATING FACT TABLE', start=True)
 
-        FROM silver.brewery AS FACT
-
-        LEFT JOIN gold.gold_D_Brewery_country AS DIM_COUNTRY ON FACT.country = DIM_COUNTRY.country
-        LEFT JOIN gold.gold_D_Brewery_state   AS DIM_STATE   ON FACT.state = DIM_STATE.state
-        LEFT JOIN gold.gold_D_Brewery_city    AS DIM_CITY    ON FACT.city = DIM_CITY.city
-
-        """)
-
-        temp.createOrReplaceTempView('BreweryTable')
-
-        if self.spark.sql("""SELECT COUNT(*) FROM gold.gold_F_Brewery""").collect()[0][0] == 0:
-            query = """
-            INSERT INTO gold.gold_F_Brewery
-            SELECT * FROM BreweryTable
-            """
-            self.spark.sql(query)
+            self.log_message(show=self._SHOW_LOG,
+                             message='[TRANSFORM] | [GOLD] | NO ADDITIONS REQUIRED', start=True)
 
         else:
-            temp = self.merge(self.spark.sql("""SELECT * FROM gold.gold_F_Brewery"""),
-                              self.spark.sql("""SELECT * FROM BreweryTable"""),
-                              df_main_key='id',
-                              df_upd_key='id')
 
-            temp.write \
-                .format('delta') \
-                .mode('overwrite') \
-                .option('silver.brewery', './brew_project/warehouse/') \
-                .saveAsTable('gold.gold_F_Brewery')
+            temp = self.spark.sql("""
+            SELECT FACT.id            AS id,
+                   FACT.name          AS name,
+                   FACT.brewery_type  AS brewery_type,
+                   FACT.latitude      AS latitude,
+                   FACT.longitude     AS longitude,
+                   FACT.phone         AS phone,
+                   FACT.website_url   AS website_url,
+                   FACT.address       AS address,
+                   DIM_COUNTRY.PK     AS p_country,
+                   DIM_STATE.PK       AS p_state,
+                   DIM_CITY.PK        AS p_city   
 
-            del temp
+            FROM silver.brewery AS FACT
 
-        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | UPDATING FACT TABLE | OK', end=True)
+            LEFT JOIN gold.gold_D_Brewery_country AS DIM_COUNTRY ON FACT.country = DIM_COUNTRY.country
+            LEFT JOIN gold.gold_D_Brewery_state   AS DIM_STATE   ON FACT.state = DIM_STATE.state
+            LEFT JOIN gold.gold_D_Brewery_city    AS DIM_CITY    ON FACT.city = DIM_CITY.city
 
-        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [SILVER] | FINISHING',
+            """)
+
+            self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | UPDATING FACT TABLE | OK', end=True)
+
+            temp.createOrReplaceTempView('BreweryTable')
+
+            if self.spark.sql("""SELECT COUNT(*) FROM gold.gold_F_Brewery""").collect()[0][0] == 0:
+                query = """
+                INSERT INTO gold.gold_F_Brewery
+                SELECT * FROM BreweryTable
+                """
+                self.spark.sql(query)
+
+            else:
+
+                temp = self.merge(self.spark.sql("""SELECT * FROM gold.gold_F_Brewery"""),
+                                  self.spark.sql("""SELECT * FROM BreweryTable"""),
+                                  df_main_key='id',
+                                  df_upd_key='id')
+                self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | SAVING TO DELTA', start=True)
+                temp.write \
+                    .format('delta') \
+                    .mode('overwrite') \
+                    .option('silver.brewery', './brew_project/warehouse/') \
+                    .saveAsTable('gold.gold_F_Brewery')
+                self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | SAVING TO DELTA| OK', end=True)
+
+                del temp
+
+        self.log_message(show=self._SHOW_LOG, message='[TRANSFORM] | [GOLD] | FINISHING',
                          start=True, end=True, sep='=')
 
         self.spark.stop()
