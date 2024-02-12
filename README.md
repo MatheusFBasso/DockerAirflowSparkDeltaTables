@@ -3,11 +3,10 @@ A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
 ![image](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/f83de518-0209-4ca5-a670-e02db5c17ce2)
 
-# Set-up: MacBook M1
-- Python version: 3.11
-- Airflow version: 2.8.1
-- PySpark: 3.5.0
-- Delta Spark: 3.1.0
+# Project details
+- Used Docker Compose with Airflow for better control over the resources
+- PySpark with Delta to better understand how Delta Tables work
+- Used ELT (Extract, Transform and Load)
 
 # 1 - [Docker Compose](docker-compose.yaml)
 - image: docker_airflow_delta:2.8.1-python3.11
