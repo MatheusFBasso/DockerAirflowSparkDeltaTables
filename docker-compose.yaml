@@ -49,7 +49,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-airflow_brewery:2.8.1-python3.11}
+  image: ${AIRFLOW_IMAGE_NAME:-docker_airflow_delta:2.8.1-python3.11}
   # build: .
   environment:
     &airflow-common-env
@@ -75,7 +75,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/brew_project:/opt/airflow/brew_project
+    - ${AIRFLOW_PROJ_DIR:-.}/delta_lake:/opt/airflow/delta_lake
+    - ${AIRFLOW_PROJ_DIR:-.}/lib:/opt/airflow/lib
+    - ${AIRFLOW_PROJ_DIR:-.}/warehouse:/opt/airflow/warehouse
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -84,6 +86,7 @@ x-airflow-common:
     postgres:
       condition: service_healthy
 
+name: docker_airflow_delta
 services:
   postgres:
     image: postgres:13
@@ -233,8 +236,8 @@ services:
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
           echo
         fi
-        mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        mkdir -p /sources/logs /sources/dags /sources/plugins /sources/lib
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins,lib,delta_lake}
         exec /entrypoint airflow version
     # yamllint enable rule:line-length
     environment:

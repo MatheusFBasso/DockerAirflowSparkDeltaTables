@@ -1,4 +1,4 @@
-pip==23.3.2
+pip>=23.3.2
 pyspark==3.5.0
 delta-spark==3.1.0
 pytz==2024.1

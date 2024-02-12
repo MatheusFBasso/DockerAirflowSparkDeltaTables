@@ -1,21 +1,10 @@
-from ..utils.utils import Now, bronze_path_raw_data
+from lib.utils.utils import Now, bronze_path_raw_data
 import requests
 import json
 from math import ceil
 from datetime import datetime
 from glob import glob
 from collections import Counter
-
-
-class SimpleDagTest(Now):
-
-    def __init__(self):
-      super().__init__()
-      self.__mensagem = 'Hello World!'
-
-    def __pprint__(self):
-        print(self.__mensagem)
-        print(self.now())
 
 
 class IncorrectBrewType(Exception):
@@ -28,6 +17,7 @@ class BreweryAPI(Now):
     _API_HTML = 'https://api.openbrewerydb.org/v1/breweries'
     _SHOW_LOG = True
 
+    ####################################################################################################################
     def __init__(self, per_page: int = 50, brewery_id: str = None, brewery_type: str = None):
         super().__init__()
 
@@ -42,6 +32,7 @@ class BreweryAPI(Now):
             else:
                 self._type = brewery_type.lower()
 
+    ####################################################################################################################
     def _get_request(self, endpoint: str, what_for: str, show_inner_log: bool = True) -> dict:
         """
         Send and analyze the request sent with the endpoint for a safer data import
@@ -76,6 +67,7 @@ class BreweryAPI(Now):
 
         return response.json()
 
+    ####################################################################################################################
     def _get_pages_list(self) -> tuple[list[int], int]:
         """
         Create a list of values needed to extract the data from the API
@@ -94,6 +86,7 @@ class BreweryAPI(Now):
         return [page + 1 for page in range(ceil(int(total_numer_of_pages.get('total')) / int(self.per_page)))], int(
             total_numer_of_pages.get('total'))
 
+    ####################################################################################################################
     def _save_file(self, save_data: list, file_name: str = 'extracted_at_') -> None:
         """
         Saves the data to the specified path with the date informing Year, month, day ('%Y_%m_%d')
@@ -113,6 +106,7 @@ class BreweryAPI(Now):
         self.log_message(show=self._SHOW_LOG,
                          message="""[LOAD] | DATA SAVED SUCCESSFULLY. FILE NAME: {}""".format(file_name))
 
+    ####################################################################################################################
     def _files_validation(self, expected_total_responses: int) -> None:
         """Validate the files saved"""
 
@@ -150,10 +144,19 @@ class BreweryAPI(Now):
 
         self.log_message(show=self._SHOW_LOG, message='[LOAD] | FILE VALIDATION FINISHED')
 
+    ####################################################################################################################
     def extract_data(self) -> None:
         """
         extract and saves the data from all the Breweries
         """
+
+        print(f'{"░" * 25}░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░{"░" * 25}')
+        print(f'{"░" * 25}░        ░░  ░░░░  ░░        ░░       ░░░░      ░░░░      ░░░        ░{"░" * 25}')
+        print(f'{"▒" * 25}▒  ▒▒▒▒▒▒▒▒▒  ▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒  ▒▒  ▒▒▒▒  ▒▒  ▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒{"▒" * 25}')
+        print(f'{"▓" * 25}▓      ▓▓▓▓▓▓    ▓▓▓▓▓▓▓  ▓▓▓▓▓       ▓▓▓  ▓▓▓▓  ▓▓  ▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓{"▓" * 25}')
+        print(f'{"█" * 25}█  █████████  ██  ██████  █████  ███  ███        ██  ████  █████  ████{"█" * 25}')
+        print(f'{"█" * 25}█        ██  ████  █████  █████  ████  ██  ████  ███      ██████  ████{"█" * 25}')
+        print(f'{"█" * 25}██████████████████████████████████████████████████████████████████████{"█" * 25}')
 
         data = []
 
@@ -204,4 +207,3 @@ class BreweryAPI(Now):
                 total, max(pages)))
 
         self._files_validation(expected_total_responses=total)
-
