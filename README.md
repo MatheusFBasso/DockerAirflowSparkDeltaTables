@@ -1,7 +1,7 @@
 # Delta Table using Airflow with Docker
 A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
-![ariflowspark drawio (1)](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/158817d4-9d9a-442e-8bf9-6129e03bbf21)
+![image](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/f83de518-0209-4ca5-a670-e02db5c17ce2)
 
 
 # Set-up: MacBook M1
