@@ -3,27 +3,40 @@ A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
 ![image](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/f83de518-0209-4ca5-a670-e02db5c17ce2)
 
-
 # Set-up: MacBook M1
 - Python version: 3.11
 - Airflow version: 2.8.1
 - PySpark: 3.5.0
 - Delta Spark: 3.1.0
 
-# Non ARM based processors:
-Please change de Dockerfile for the base processor that you are using,
-arm64 is used on ARM based processors.
+# 1 - [Docker Compose](docker-compose.yaml)
+- image: docker_airflow_delta:2.8.1-python3.11
+- name: docker_airflow_delta
+
+The rest of the configuration was not changed from the standard.
+
+# 2 - [Docker File](Dockerfile)
+- requirements: will install the [requirements.txt](requirements.txt)
+- Java for Spark: will install openjdk-17
+
+## Non ARM based processors:
+  Please change de Dockerfile for the base processor that you are using,
+  arm64 is used on ARM based processors.
+  ```
+  # Set JAVA_HOME
+  ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
+  RUN export JAVA_HOME
+  ```
+
+## Commands for Docker creation:
+- Creating the image:
+
 ```
-# Set JAVA_HOME
-ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
-RUN export JAVA_HOME
+docker-build -t docker_airflow_delta:2.8.1-python3.11 .
 ```
 
-# Docker (v4.27.1) set-up:
-Commands used on terminal
-```
-docker build -t airflow_brewery:2.8.1-python3.11 .
-```
+- Creating and running docker:
+
 ```
 docker-compose up -d
 ```
