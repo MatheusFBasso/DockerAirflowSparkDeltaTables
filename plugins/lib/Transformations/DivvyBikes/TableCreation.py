@@ -117,6 +117,43 @@ class SetDeltaTables(Now):
             self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_bikes_status", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
+            # ----------------------------------------------------------------------------------------------------------
+            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information_now", start=True)
+            if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_station_information'):
+                schema = StructType([StructField('station_id',           StringType(), False),
+                                     StructField('name',                 StringType(), True),
+                                     StructField('short_name',           StringType(), True),
+                                     StructField('lat',                  DoubleType(), True),
+                                     StructField('lon',                  DoubleType(), True),
+                                     StructField('rental_uris',          StringType(), True),
+                                     StructField('last_updated',         LongType(), True),
+                                     StructField('date_ref_carga',       DateType(), True)])
+
+                brew_silver_df = self._spark.createDataFrame([], schema)
+                brew_silver_df.write.format('delta')\
+                              .mode('overwrite')\
+                              .partitionBy('date_ref_carga')\
+                              .option("overwriteSchema", "True")\
+                              .saveAsTable('silver.divvy_station_information')
+            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information", end=True)
+            # ----------------------------------------------------------------------------------------------------------
+            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information_now", start=True)
+            if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_station_information_now'):
+                schema = StructType([StructField('station_id',           StringType(), False),
+                                     StructField('name',                 StringType(), True),
+                                     StructField('short_name',           StringType(), True),
+                                     StructField('lat',                  DoubleType(), True),
+                                     StructField('lon',                  DoubleType(), True),
+                                     StructField('rental_uris',          StringType(), True),
+                                     StructField('last_updated',         LongType(), True)])
+                brew_silver_df = self._spark.createDataFrame([], schema)
+                brew_silver_df.write.format('delta') \
+                    .mode('overwrite') \
+                    .option("overwriteSchema", "True") \
+                    .saveAsTable('silver.divvy_station_information_now')
+            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information_now", end=True)
+            # ----------------------------------------------------------------------------------------------------------
+
             self.log_message(show=self._SHOW, message=f"Creating Table brewery is not exists | OK")
             self.log_message(show=self._SHOW, message=f"SILVER DELTA TABLE CREATED", end=True, start=True)
             # ----------------------------------------------------------------------------------------------------------
