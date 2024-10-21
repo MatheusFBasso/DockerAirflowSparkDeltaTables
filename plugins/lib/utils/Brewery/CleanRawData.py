@@ -1,4 +1,5 @@
-from lib.utils.utils import Now, bronze_path_raw_data, bronze_path_raw_data_bkp
+from lib.utils.Brewery.brewery_paths import *
+from lib.utils.Now import Now
 from datetime import datetime, timedelta
 import shutil
 import os
@@ -62,6 +63,7 @@ class CleanRawData(Now):
             if os.path.isfile(file_name):
                 shutil.copy(file_name, new_dst_dir)
                 os.remove(file_name)
+                print(f"from: [{file_name}] to [{new_dst_dir}]")
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW, message='BACKUP FILES MOVED SUCCESSFULLY')
 

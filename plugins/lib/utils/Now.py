@@ -1,11 +1,6 @@
 from datetime import datetime
 import pytz
 
-warehouse_dir = './warehouse'
-bronze_path_raw_data = './delta_lake/brewery/raw_data'
-bronze_path_raw_data_bkp = './delta_lake/brewery/raw_data_bkp'
-
-
 class Now:
 
     ####################################################################################################################
