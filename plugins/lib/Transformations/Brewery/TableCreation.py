@@ -1,5 +1,6 @@
 from lib.Spark.GetSpark import DeltaSpark
 from lib.utils.Now import Now
+from delta.tables import DeltaTable
 from pyspark.sql.types import StructType, StructField, TimestampType, IntegerType, StringType, DoubleType, DateType
 
 

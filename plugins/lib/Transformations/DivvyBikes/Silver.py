@@ -63,7 +63,7 @@ class Silver(Now):
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_bikes_status_now', start=True)
         delta_table_silver = DeltaTable.forPath(sparkSession=self.spark,
-                                                path='./warehouse/silver.db/divvy_bikes_status')
+                                                path='./warehouse/silver.db/divvy_bikes_status_now')
 
         (delta_table_silver
          .alias('as_is')
@@ -77,8 +77,7 @@ class Silver(Now):
                 'rental_uris': 'as_now.rental_uris',
                 'is_reserved': 'as_now.is_reserved',
                 'is_disabled': 'as_now.is_disabled',
-                'last_updated': 'as_now.last_updated',
-                'last_updated_ts': 'as_now.last_updated_ts'})
+                'last_updated': 'as_now.last_updated'})
          .whenNotMatchedInsert(
             values={
                 'bike_id': 'as_now.bike_id',
@@ -89,8 +88,7 @@ class Silver(Now):
                 'rental_uris': 'as_now.rental_uris',
                 'is_reserved': 'as_now.is_reserved',
                 'is_disabled': 'as_now.is_disabled',
-                'last_updated': 'as_now.last_updated',
-                'last_updated_ts': 'as_now.last_updated_ts'})
+                'last_updated': 'as_now.last_updated'})
          .execute())
 
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_bikes_status_now | OK', end=True)

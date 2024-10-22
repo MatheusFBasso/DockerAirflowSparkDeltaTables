@@ -1,6 +1,5 @@
+from lib.utils.DivvyBikes.divvy_bikes_path import bronze_path_raw_data_bkp, bronze_path_raw_data
 from lib.utils.Now import Now
-from lib.utils.DivvyBikes.divvy_bikes_path import *
-
 from datetime import datetime
 import requests
 import json
