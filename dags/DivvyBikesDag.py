@@ -119,8 +119,8 @@ def divvy_clean_vehicle_types():
 # ----------------------------------------------------------------------------------------------------------------------
 with DAG(
     dag_id='DivvyBikesDag',
-    schedule_interval='0 */1 * * *',
-    concurrency=3,
+    schedule_interval='*/30 * * * *',
+    concurrency=2,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
     tags=['DivvyBikes']
