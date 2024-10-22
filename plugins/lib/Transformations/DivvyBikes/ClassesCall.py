@@ -20,9 +20,24 @@ class DivvyBikesCall:
 
             'divvy_get_station_information': cls.get_station_info_aux,
             'silver_station_information': cls.silver_station_info_aux,
+
+            'divvy_get_station_status': cls.get_station_status_aux,
+            'silver_station_status': cls.silver_station_status_aux,
+
+            'divvy_get_system_pricing': cls.get_system_pricing_aux,
+            'silver_system_pricing': cls.silver_system_pricing_aux,
+
+            'divvy_get_vehicle_types': cls.get_vehicle_types_aux,
+            'silver_vehicle_types': cls.silver_vehicle_types_aux,
         }
 
         return map_function.get(function, func_not_found)(args, kwargs)
+
+
+    @staticmethod
+    def clean_raw_data_aux(args, kwargs):
+        dict_kwargs = kwargs
+        return CleanRawData(sub_folder_path=dict_kwargs.get('sub_folder_path')).execute()
 
     @staticmethod
     def set_delta_tables_aux(args, kwargs):
@@ -31,11 +46,6 @@ class DivvyBikesCall:
     @staticmethod
     def get_bike_status_aux(args, kwargs):
         return DivvyBikes().initialize('get_free_bike_status')
-
-    @staticmethod
-    def clean_raw_data_aux(args, kwargs):
-        dict_kwargs = kwargs
-        return CleanRawData(sub_folder_path=dict_kwargs.get('sub_folder_path')).execute()
 
     @staticmethod
     def silver_bike_status_aux(args, kwargs):
@@ -48,3 +58,27 @@ class DivvyBikesCall:
     @staticmethod
     def silver_station_info_aux(args, kwargs):
         return Silver().silver_station_information()
+
+    @staticmethod
+    def get_station_status_aux(args, kwargs):
+        return DivvyBikes().initialize('get_station_status')
+
+    @staticmethod
+    def silver_station_status_aux(args, kwargs):
+        return Silver().silver_station_status()
+
+    @staticmethod
+    def get_system_pricing_aux(args, kwats):
+        return DivvyBikes().initialize('get_system_pricing_plan')
+
+    @staticmethod
+    def silver_system_pricing_aux(args, kwats):
+        return Silver().silver_system_pricing_plan()
+
+    @staticmethod
+    def get_vehicle_types_aux(args, kwargs):
+        return DivvyBikes().initialize('get_vehicle_types')
+
+    @staticmethod
+    def silver_vehicle_types_aux(args, kwargs):
+        return Silver().silver_vehicle_types()

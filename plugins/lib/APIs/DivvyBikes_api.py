@@ -51,7 +51,7 @@ class DivvyBikes(Now):
 
         self.log_message(show=self._SHOW_LOG, message='BEGINNING TO SAVE THE DATA TO BRONZE LAYER')
 
-        file_name += datetime.today().strftime('%Y_%m_%d')
+        file_name += datetime.today().strftime('%Y_%m_%dT%H_%M')
 
         if not os.path.exists(f"""{path}/"""):
             os.makedirs(f"""{path}/""")

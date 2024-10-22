@@ -131,25 +131,28 @@ class SetDeltaTables(Now):
             self._spark.sql(f"CREATE DATABASE IF NOT EXISTS info")
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
-            self.log_message(show=self._SHOW, message=f"Creating info.log if not exists")
-            # ----------------------------------------------------------------------------------------------------------
-            schema = StructType([
-                StructField('id',            TimestampType(), False),
-                StructField('db',            StringType(), False),
-                StructField('table',         StringType(), False),
-                StructField('rows_inserted', IntegerType(), False),
-                StructField('start_time',    TimestampType(), False),
-                StructField('end_time',      TimestampType(), False),
-            ])
 
-            empty_info_df = self._spark.createDataFrame([], schema)
-            empty_info_df.write.format('delta')\
-                         .mode('overwrite')\
-                         .partitionBy('id')\
-                         .option("overwriteSchema", "True")\
-                         .saveAsTable("info.log")
+            if not DeltaTable.isDeltaTable(self._spark, './warehouse/info.db/log'):
+                self.log_message(show=self._SHOW, message=f"Creating info.log first time", start=True)
+                # ------------------------------------------------------------------------------------------------------
+                schema = StructType([
+                    StructField('id', TimestampType(), False),
+                    StructField('db', StringType(), False),
+                    StructField('table', StringType(), False),
+                    StructField('rows_inserted', IntegerType(), False),
+                    StructField('start_time', TimestampType(), False),
+                    StructField('end_time', TimestampType(), False),
+                ])
+                empty_info_df = self._spark.createDataFrame([], schema)
+                empty_info_df.write.format('delta') \
+                    .mode('overwrite') \
+                    .partitionBy('id') \
+                    .option("overwriteSchema", "True") \
+                    .saveAsTable("info.log")
+                # ------------------------------------------------------------------------------------------------------
+                self.log_message(show=self._SHOW, message=f"Creating info.log first time | OK", end=True)
+                self.log_message(show=self._SHOW, message=f"LOGTABLE DELTA CREATED", end=True, start=True)
+                # ------------------------------------------------------------------------------------------------------
 
-            # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating LogTable if not exists | OK")
-            self.log_message(show=self._SHOW, message=f"LOGTABLE DELTA CREATED", end=True, start=True)
-            # ----------------------------------------------------------------------------------------------------------
+            else:
+                self.log_message(show=self._SHOW, message=f"No need for creating info.log | OK", start=True, end=True)
