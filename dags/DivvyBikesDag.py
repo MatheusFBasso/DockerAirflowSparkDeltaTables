@@ -26,6 +26,12 @@ def silver_bike_status():
     print(f'FINISHED'.rjust(120, '.'))
 
 
+def gold_bike_status():
+    print(f'STARTING'.rjust(120, '.'))
+    DivvyBikesCall('gold_bike_status')
+    print(f'FINISHED'.rjust(120, '.'))
+
+
 def divvy_clean_bike_status():
     print(f'STARTING'.rjust(120, '.'))
     DivvyBikesCall('clean_raw_data', sub_folder_path='free_bike_status')
@@ -42,8 +48,13 @@ def divvy_get_station_information():
 
 def silver_station_information():
     print(f'STARTING'.rjust(120, '.'))
-    # sleep(30)
     DivvyBikesCall('silver_station_information')
+    print(f'FINISHED'.rjust(120, '.'))
+
+
+def gold_station_information():
+    print(f'STARTING'.rjust(120, '.'))
+    DivvyBikesCall('gold_station_information')
     print(f'FINISHED'.rjust(120, '.'))
 
 
@@ -63,8 +74,13 @@ def divvy_get_station_staus():
 
 def silver_station_staus():
     print(f'STARTING'.rjust(120, '.'))
-    # sleep(30)
     DivvyBikesCall('silver_station_status')
+    print(f'FINISHED'.rjust(120, '.'))
+
+
+def gold_station_staus():
+    print(f'STARTING'.rjust(120, '.'))
+    DivvyBikesCall('gold_station_status')
     print(f'FINISHED'.rjust(120, '.'))
 
 
@@ -85,6 +101,12 @@ def divvy_get_system_pricing():
 def silver_system_pricing():
     print(f'STARTING'.rjust(120, '.'))
     DivvyBikesCall('silver_system_pricing')
+    print(f'FINISHED'.rjust(120, '.'))
+
+
+def gold_system_pricing():
+    print(f'STARTING'.rjust(120, '.'))
+    DivvyBikesCall('gold_system_pricing')
     print(f'FINISHED'.rjust(120, '.'))
 
 
@@ -109,6 +131,13 @@ def silver_vehicle_types():
     print(f'FINISHED'.rjust(120, '.'))
 
 
+def gold_vehicle_types():
+    print(f'STARTING'.rjust(120, '.'))
+    # sleep(10)
+    DivvyBikesCall('gold_vehicle_types')
+    print(f'FINISHED'.rjust(120, '.'))
+
+
 def divvy_clean_vehicle_types():
     print(f'STARTING'.rjust(120, '.'))
     DivvyBikesCall('clean_raw_data', sub_folder_path='vehicle_types')
@@ -119,7 +148,7 @@ def divvy_clean_vehicle_types():
 # ----------------------------------------------------------------------------------------------------------------------
 with DAG(
     dag_id='DivvyBikesDag',
-    schedule_interval='*/30 * * * *',
+    schedule_interval='*/59 * * * *',
     concurrency=2,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
@@ -133,6 +162,12 @@ with DAG(
     silver_bike_status = PythonOperator(
         task_id='SilverBikeStatus',
         python_callable=silver_bike_status,
+        retries=2,
+        retry_delay=5,
+    )
+    gold_bike_status = PythonOperator(
+        task_id='GoldBikeStatus',
+        python_callable=gold_bike_status,
         retries=2,
         retry_delay=5,
     )
@@ -153,6 +188,12 @@ with DAG(
         retries=2,
         retry_delay=5,
     )
+    gold_station_information = PythonOperator(
+        task_id='GoldStationInformation',
+        python_callable=gold_station_information,
+        retries=2,
+        retry_delay=5,
+    )
     divvy_clean_station_information = PythonOperator(
         task_id='CleanStationInformation',
         python_callable=divvy_clean_station_information
@@ -167,6 +208,12 @@ with DAG(
     silver_station_staus = PythonOperator(
         task_id='SilverStationStatus',
         python_callable=silver_station_staus,
+        retries=2,
+        retry_delay=5,
+    )
+    gold_station_staus = PythonOperator(
+        task_id='GoldStationStatus',
+        python_callable=gold_station_staus,
         retries=2,
         retry_delay=5,
     )
@@ -187,6 +234,12 @@ with DAG(
         retries=2,
         retry_delay=5,
     )
+    gold_system_pricing = PythonOperator(
+        task_id='GoldSystemPricing',
+        python_callable=gold_system_pricing,
+        retries=2,
+        retry_delay=5,
+    )
     divvy_clean_system_pricing = PythonOperator(
         task_id='CleanSystemPricing',
         python_callable=divvy_clean_system_pricing
@@ -204,6 +257,12 @@ with DAG(
         retries=2,
         retry_delay=5,
     )
+    gold_vehicle_types = PythonOperator(
+        task_id='GoldVehicleTypes',
+        python_callable=gold_vehicle_types,
+        retries=2,
+        retry_delay=5,
+    )
     divvy_clean_vehicle_types = PythonOperator(
         task_id='CleanVehicleTypes',
         python_callable=divvy_clean_vehicle_types
@@ -218,11 +277,11 @@ with DAG(
     )
     # ------------------------------------------------------------------------------------------------------------------
 
-    divvy_set_delta_tables >> silver_station_information >> divvy_clean_station_information
-    divvy_set_delta_tables >> silver_bike_status >> divvy_clean_bike_status
-    divvy_set_delta_tables >> silver_system_pricing >> divvy_clean_system_pricing
-    divvy_set_delta_tables >> silver_station_staus >> divvy_clean_station_staus
-    divvy_set_delta_tables >> silver_vehicle_types >> divvy_clean_vehicle_types
+    divvy_set_delta_tables >> silver_station_information >> divvy_clean_station_information >> gold_station_information
+    divvy_set_delta_tables >> silver_bike_status >> divvy_clean_bike_status >> gold_bike_status
+    divvy_set_delta_tables >> silver_system_pricing >> divvy_clean_system_pricing >> gold_system_pricing
+    divvy_set_delta_tables >> silver_station_staus >> divvy_clean_station_staus >> gold_station_staus
+    divvy_set_delta_tables >> silver_vehicle_types >> divvy_clean_vehicle_types >> gold_vehicle_types
 
     divvy_get_system_pricing >> divvy_set_delta_tables
     divvy_get_station_staus >> divvy_set_delta_tables
