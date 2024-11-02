@@ -1,4 +1,5 @@
-from lib.utils.utils import Now, bronze_path_raw_data, bronze_path_raw_data_bkp
+from lib.utils.DivvyBikes.divvy_bikes_path import bronze_path_raw_data, bronze_path_raw_data_bkp
+from lib.utils.Now import Now
 from datetime import datetime, timedelta
 import shutil
 import os
@@ -11,9 +12,13 @@ class CleanRawData(Now):
     _TODAY_FORMATED = datetime(datetime.now().year, datetime.now().month, datetime.now().day).strftime("%Y_%m_%d")
 
     ####################################################################################################################
-    def __init__(self, raw_data_path: str = bronze_path_raw_data, raw_data_bkp_path: str = bronze_path_raw_data_bkp):
-        self._raw_path = raw_data_path
-        self._raw_bkp = raw_data_bkp_path
+    def __init__(self,
+                 sub_folder_path: str,
+                 raw_data_path: str = bronze_path_raw_data,
+                 raw_data_bkp_path: str = bronze_path_raw_data_bkp):
+
+        self._raw_path = raw_data_path + '/' + sub_folder_path + '/'
+        self._raw_bkp = raw_data_bkp_path + '/' + sub_folder_path + '/'
 
     ####################################################################################################################
     @staticmethod
@@ -37,7 +42,7 @@ class CleanRawData(Now):
             return None
 
     ####################################################################################################################
-    def _move_all_files(self, pattern: str = 'PART_*.json', subfolder_name: str = None) -> None:
+    def _move_all_files(self, pattern: str = 'extracted_*.json', subfolder_name: str = None) -> None:
         """
         Moves all files from src_dir to dst_dir that match the given pattern into a new subfolder.
 
@@ -62,6 +67,7 @@ class CleanRawData(Now):
             if os.path.isfile(file_name):
                 shutil.copy(file_name, new_dst_dir)
                 os.remove(file_name)
+                print(f"from: [{file_name}] to [{new_dst_dir}]")
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW, message='BACKUP FILES MOVED SUCCESSFULLY')
 

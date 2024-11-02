@@ -1,7 +1,7 @@
 # Delta Table using Airflow with Docker
 A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
-![Infra](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/f83de518-0209-4ca5-a670-e02db5c17ce2)
+![ariflowspark drawio](https://github.com/user-attachments/assets/6953e613-b441-4418-bbd8-f64017c1a336)
 
 # Project details
 - Used Docker Compose with Airflow for better control over the resources
@@ -18,9 +18,9 @@ The rest of the configuration was not changed from the standard.
 - requirements: will install the [requirements.txt](requirements.txt)
 - Java for Spark: will install openjdk-17
 
-## Non ARM based processors:
-  Please change de Dockerfile for the base processor that you are using,
-  arm64 is used on ARM based processors.
+## Non ARM-based processors:
+  Please change the Dockerfile for the base processor that you are using,
+  arm64 is used on ARM-based processors.
   ```
   # Set JAVA_HOME
   ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
@@ -45,41 +45,37 @@ docker-build -t docker_airflow_delta:2.8.1-python3.11 .
 docker-compose up -d
 ```
 
-# 3 - [Airflow](dags/brew_dag.py)
+## Medallion Architecture (Multi-hop)
 
-Orchestration
+It uses a multi-hop architecture, which means that we have bronze, silver, and gold layers.
 
-![Airflow](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/d3fd8a72-26c8-4fd1-8c23-b0c3a620c65a)
+## Divvy Bikes Runs and Orchestration
 
-To ease the use of the multiple classes created there is one that by passing only the name that we need will execute the desired class. [brew_classes](plugins/lib/brewery/delta/brew_classes.py)
 
-# 4 - Extract [Bronze](plugins/lib/brewery/api_breweries/get_data_breweries.py)
+![Screenshot 2024-11-02 at 00 43 45](https://github.com/user-attachments/assets/f7f66a68-50b2-488d-a66d-f72d28dec794)
 
-Using Python's `request` library to consume data via a Brewery API to get the data as json.
+- 1 - [Orchestration](dags/DivvyBikesDag.py) works on a single file per execution, in this case, we can't have two extractions, and for that reason, there's a clean that will backup any files in the bronze path.
+- 2 - Extract the data to the designated path as JSON. [Code link](plugins/lib/APIs/DivvyBikes_api.py)
+- 3 - Create Silver, Gold, and Log tables if not created as the Database. [Code link](plugins/lib/Transformations/DivvyBikes/TableCreation.py)
+- 4 - The silver part, loads the JSON and saves it via insert into the main silver table. [Code link](plugins/lib/Transformations/DivvyBikes/Silver.py)
+- 5 - Back up the files, cleaning the folder for further use. [Code link](plugins/lib/utils/DivvyBikes/CleanRawData.py)
+- 6 - Updates the Gold tables, which are the Silver but in "real-time", in the code the update interval is set to 10 min. [Code link](plugins/lib/Transformations/DivvyBikes/Gold.py)
 
-# 5 - Load [Bronze](plugins/lib/brewery/delta/clean_raw_data.py)
+For the Extraction, we have the following log:
 
-Saves the json files on a local folder shared on both docker and local computer called `delta_lake`:
-  - `delta_lake`
-    - `brewery`
-      - `raw_data`
-      - `raw_data_bkp`
-   
-The *Extract* will save the json files on the `delta_lake/brewery/raw_data` with the data on their names.
+![image](https://github.com/user-attachments/assets/4d97f3ee-7690-4edd-b49a-ed6c2a29dfd9)
 
-After the *Silver* the files are moved to the `delta_lake/brewery/raw_data_bkp` creating a sub-folder with the date name, and also deleting old backups within a set period of 7 days.
+For the Table Creation:
 
-# 6 - Transform
+![image](https://github.com/user-attachments/assets/33523448-763c-4793-9846-ed94d98476b3)
 
-## 6.1 - [Creating Delta Tables](plugins/lib/brewery/delta/SetDeltaTables.py)
+![image](https://github.com/user-attachments/assets/6068b763-577e-4e4b-bd1d-b0270f835e12)
 
-Before running the silver table the Delta Tables used must be created for use.
+![image](https://github.com/user-attachments/assets/a09b6234-d3eb-4ff4-b20d-867823565aa8)
 
-## 6.2 - [SILVER](plugins/lib/brewery/delta/raw_files_to_silver.py)
+## About the logs
+The log will inform the date with hour of each step, to help in case of an error.
 
-The json files on the `delta_lake/brewery/raw_data` will be transformed into PySpark DataFrame and with a few treatments to prepare and load the data into the Delta Tables previously created, with a new column named `date_ref_carga` so that we can keep the old information available.
+## Data checking
 
-## 6.3 - [GOLD](plugins/lib/brewery/delta/silver_to_gold.py)
-
-After the creation and population of the silver Delta Table the gold will create multiple dim tables and a fact table. The reason behind this creation is to better understand the process and analysis using PySpark along with Delta Tables and further increase read time after.
-For further updates will be a way to load the warehouse.
+![image](https://github.com/user-attachments/assets/c8628501-6c26-4ab0-aed0-6e18bb21b54f)

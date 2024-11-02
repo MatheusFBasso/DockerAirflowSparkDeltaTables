@@ -76,7 +76,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/delta_lake:/opt/airflow/delta_lake
-    - ${AIRFLOW_PROJ_DIR:-.}/lib:/opt/airflow/lib
+    - ${AIRFLOW_PROJ_DIR:-.}/DataLake:/opt/airflow/DataLake
     - ${AIRFLOW_PROJ_DIR:-.}/warehouse:/opt/airflow/warehouse
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

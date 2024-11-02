@@ -1,9 +1,9 @@
-FROM apache/airflow:2.8.1-python3.11
+FROM apache/airflow:2.10.2-python3.11
 
 ENV PIP_USER=false
 COPY requirements.txt /requirements.txt
 RUN python3 -m venv /opt/airflow/brew_env
-RUN pip install --no-cache-dir --user -r /requirements.txt
+RUN pip install -r /requirements.txt
 
 USER root
 # Install OpenJDK-17
