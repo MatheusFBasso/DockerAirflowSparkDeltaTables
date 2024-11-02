@@ -3,7 +3,6 @@ A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
 ![ariflowspark drawio](https://github.com/user-attachments/assets/6953e613-b441-4418-bbd8-f64017c1a336)
 
-
 # Project details
 - Used Docker Compose with Airflow for better control over the resources
 - PySpark with Delta to better understand how Delta Tables work
@@ -29,6 +28,11 @@ The rest of the configuration was not changed from the standard.
   ```
 
 ## Commands for Docker creation:
+- Creating needed dirs:
+```
+mkdir config warehouse logs delta_lake/brewery/raw_data delta_lake/brewery/raw_data_bkp
+```
+
 - Creating the image:
 
 ```
@@ -75,7 +79,3 @@ The log will inform the date with hour of each step, to help in case of an error
 ## Data checking
 
 ![image](https://github.com/user-attachments/assets/c8628501-6c26-4ab0-aed0-6e18bb21b54f)
-
-
-
-
