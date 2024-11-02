@@ -19,6 +19,11 @@ def brew_clean_raw_data():
     BreweryClasses('brew_clean_raw_data')
     print(f'FINISHED'.rjust(120, '.'))
 # ----------------------------------------------------------------------------------------------------------------------
+def pre_brew_clean_raw_data():
+    print(f'STARTING'.rjust(120, '.'))
+    BreweryClasses('brew_clean_raw_data')
+    print(f'FINISHED'.rjust(120, '.'))
+# ----------------------------------------------------------------------------------------------------------------------
 def brew_silver():
     print(f'STARTING'.rjust(120, '.'))
     BreweryClasses('brew_silver')
@@ -34,7 +39,7 @@ def brew_gold_type_total():
 with DAG(
     dag_id='BreweryDag',
     schedule_interval='10 15 * * *',
-    concurrency=1,
+    concurrency=2,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
     tags=['Brewery']
@@ -57,6 +62,12 @@ with DAG(
         task_concurrency=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
+    pre_move_files_task = PythonOperator(
+        task_id='PreMoveFiles',
+        python_callable=brew_clean_raw_data,
+        task_concurrency=1,
+    )
+    # ------------------------------------------------------------------------------------------------------------------
     brew_silver = PythonOperator(
         task_id='Silver',
         python_callable=brew_silver
@@ -69,5 +80,5 @@ with DAG(
     )
     # ------------------------------------------------------------------------------------------------------------------
 
-    brew_extract >> brew_silver >> move_files_task
+    pre_move_files_task >> brew_extract >> brew_silver >> move_files_task
     brew_create_tables >> brew_silver >> brew_type_total

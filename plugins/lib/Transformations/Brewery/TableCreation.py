@@ -76,7 +76,6 @@ class SetDeltaTables(Now):
             self._spark.sql(f"CREATE DATABASE IF NOT EXISTS silver")
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
-            self.log_message(show=self._SHOW, message=f"Creating Table silver.brewery if not exists")
             # ----------------------------------------------------------------------------------------------------------
             schema = StructType([
                 StructField('brewery_type', StringType(), True),
@@ -98,16 +97,19 @@ class SetDeltaTables(Now):
             brew_silver_df = self._spark.createDataFrame([], schema)
 
             for table_c in ['silver.brewery', 'silver.brewery_daily']:
-                print(f"{table_c}")
-                brew_silver_df.write.format('delta')\
-                                   .mode('overwrite')\
-                                   .partitionBy('date_ref_carga')\
-                                   .option("overwriteSchema", "True")\
-                                   .saveAsTable(table_c)
-                print(f"{table_c} | OK")
+                self.log_message(show=self._SHOW, message=f"Creating Table {table_c} if not exists", start=True)
+                if not DeltaTable.isDeltaTable(self._spark, f'./warehouse/silver.db/{table_c.split(".")[-1]}'):
+                    brew_silver_df.write.format('delta')\
+                                       .mode('overwrite')\
+                                       .partitionBy('date_ref_carga')\
+                                       .option("overwriteSchema", "True")\
+                                       .saveAsTable(table_c)
+                    print(f"{table_c} Created successfully!")
+                else:
+                    print(f"No need to create table {table_c}")
+                self.log_message(show=self._SHOW, message=f"Creating Table {table_c} if not exists | OK", end=True)
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Table brewery is not exists | OK")
             self.log_message(show=self._SHOW, message=f"SILVER DELTA TABLE CREATED", end=True, start=True)
             # ----------------------------------------------------------------------------------------------------------
 
