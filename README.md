@@ -1,7 +1,8 @@
 # Delta Table using Airflow with Docker
 A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
 
-![image](https://github.com/MatheusFBasso/DockerAirflowSparkDeltaTables/assets/62318283/f83de518-0209-4ca5-a670-e02db5c17ce2)
+![ariflowspark drawio](https://github.com/user-attachments/assets/6953e613-b441-4418-bbd8-f64017c1a336)
+
 
 # Project details
 - Used Docker Compose with Airflow for better control over the resources
@@ -18,9 +19,9 @@ The rest of the configuration was not changed from the standard.
 - requirements: will install the [requirements.txt](requirements.txt)
 - Java for Spark: will install openjdk-17
 
-## Non ARM based processors:
-  Please change de Dockerfile for the base processor that you are using,
-  arm64 is used on ARM based processors.
+## Non ARM-based processors:
+  Please change the Dockerfile for the base processor that you are using,
+  arm64 is used on ARM-based processors.
   ```
   # Set JAVA_HOME
   ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
@@ -40,15 +41,41 @@ docker-build -t docker_airflow_delta:2.8.1-python3.11 .
 docker-compose up -d
 ```
 
-# Delta Table Test
-There is a notebook `tests.ipynb` on the project testing the Delta tables, to better see the output I suggest PyCharm/DataSpell.
+## Medallion Architecture (Multi-hop)
 
-For now you can check the tables by their file path using the following code:
-```
-df = spark.read.format("delta").load("./brew_project/warehouse/silver.db/brewery")
-```
-With this code is possible to load the Delta table.
+It uses a multi-hop architecture, which means that we have bronze, silver, and gold layers.
 
-The Gold layer is optimized to load queries faster, so we have partitions created on main columns which will cause a relative delay in saving files or updating them, for that reason there's a part of the code that while it prepares the `dim` tables analyses if there are new data to be inserted on which one of them, if there are no new data it won't update the delta tables, so there is no waste on processing.
+## Divvy Bikes Runs and Orchestration
 
-For further updates will be a way to load the warehouse.
+
+![Screenshot 2024-11-02 at 00 43 45](https://github.com/user-attachments/assets/f7f66a68-50b2-488d-a66d-f72d28dec794)
+
+- 1 - [Orchestration](dags/DivvyBikesDag.py) works on a single file per execution, in this case, we can't have two extractions, and for that reason, there's a clean that will backup any files in the bronze path.
+- 2 - Extract the data to the designated path as JSON. [Code link](plugins/lib/APIs/DivvyBikes_api.py)
+- 3 - Create Silver, Gold, and Log tables if not created as the Database. [Code link](plugins/lib/Transformations/DivvyBikes/TableCreation.py)
+- 4 - The silver part, loads the JSON and saves it via insert into the main silver table. [Code link](plugins/lib/Transformations/DivvyBikes/Silver.py)
+- 5 - Back up the files, cleaning the folder for further use. [Code link](plugins/lib/utils/DivvyBikes/CleanRawData.py)
+- 6 - Updates the Gold tables, which are the Silver but in "real-time", in the code the update interval is set to 10 min. [Code link](plugins/lib/Transformations/DivvyBikes/Gold.py)
+
+For the Extraction, we have the following log:
+
+![image](https://github.com/user-attachments/assets/4d97f3ee-7690-4edd-b49a-ed6c2a29dfd9)
+
+For the Table Creation:
+
+![image](https://github.com/user-attachments/assets/33523448-763c-4793-9846-ed94d98476b3)
+
+![image](https://github.com/user-attachments/assets/6068b763-577e-4e4b-bd1d-b0270f835e12)
+
+![image](https://github.com/user-attachments/assets/a09b6234-d3eb-4ff4-b20d-867823565aa8)
+
+## About the logs
+The log will inform the date with hour of each step, to help in case of an error.
+
+## Data checking
+
+![image](https://github.com/user-attachments/assets/c8628501-6c26-4ab0-aed0-6e18bb21b54f)
+
+
+
+
