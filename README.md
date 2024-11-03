@@ -1,21 +1,50 @@
-# Delta Table using Airflow with Docker
-A project to study Delta Tables using an ETL/ELT process and Airflow with Docker
+# Multi-Hop Data Pipeline with Apache Airflow, Docker, and Delta Lake
+Project Overview
+This project implements a scalable and modular data pipeline using Apache Airflow orchestrated via Docker Compose. The main objective is to extract data from two APIs — the Brewery API and Divvy Bikes API — and process it through a multi-layered data solution.
 
 ![ariflowspark drawio (2)](https://github.com/user-attachments/assets/ac3f323e-28bd-4a92-bd5a-fb6e0f0ea1c5)
 
+## Architecture
+- Docker Compose: Used to deploy and manage Apache Airflow in a containerized environment.
+- Apache Airflow: Orchestrates the data pipeline, scheduling and managing the data extraction, transformation, and loading (ETL) processes.
+- Delta Lake: Provides ACID transactions and scalable metadata handling for the bronze, silver, and gold data layers.
 
-# Project details
-- Used Docker Compose with Airflow for better control over the resources
-- PySpark with Delta to better understand how Delta Tables work
-- Used ELT (Extract, Transform and Load)
+## Data Workflow
 
-# 1 - [Docker Compose](docker-compose.yaml)
+### 1. Data Extraction:
+
+- Extracts raw data from the Brewery API and Divvy Bikes API.
+- Stores the raw data as JSON files in a local Docker volume.
+
+### 2. Bronze Layer:
+
+- Reads the raw JSON data and ingests it into Delta tables for initial storage.
+
+### 3. Silver Layer:
+
+- Processes the data from the bronze Delta tables to convert it into a human-readable format, standardizing and cleaning the data.
+
+### 4. Gold Layer:
+
+- Generates summary statistics for the Brewery data.
+- Updates real-time positions for the Divvy Bikes data using a merge join for the most accurate, up-to-date information.
+
+## Features
+
+- Containerized Deployment: Simplified environment setup using Docker Compose.
+- ETL Orchestration: Airflow DAGs to automate and monitor the pipeline steps.
+- Data Integrity: Delta Lake ensures reliable data management with ACID compliance.
+- Multi-Hop Processing: Implements a clear data flow from raw ingestion (bronze) to intermediate processing (silver) and final analytics-ready output (gold).
+
+# Docker Configuration
+
+## 1. [Docker Compose](docker-compose.yaml)
 - image: docker_airflow_delta:2.8.1-python3.11
 - name: docker_airflow_delta
 
 The rest of the configuration was not changed from the standard.
 
-# 2 - [Docker File](Dockerfile)
+## 2. [Docker File](Dockerfile)
 - requirements: will install the [requirements.txt](requirements.txt)
 - Java for Spark: will install openjdk-17
 
@@ -31,13 +60,13 @@ The rest of the configuration was not changed from the standard.
 ## Commands for Docker creation:
 - Creating needed dirs:
 ```
-mkdir config warehouse logs delta_lake/brewery/raw_data delta_lake/brewery/raw_data_bkp
+mkdir config warehouse logs DeltaLake 
 ```
 
 - Creating the image:
 
 ```
-docker-build -t docker_airflow_delta:2.8.1-python3.11 .
+docker-build -t docker_airflow_delta:2.10.2-python3.11 .
 ```
 
 - Creating and running docker:
@@ -45,8 +74,9 @@ docker-build -t docker_airflow_delta:2.8.1-python3.11 .
 ```
 docker-compose up -d
 ```
+---
 
-## Medallion Architecture (Multi-hop) - Divvy Bikes
+# Medallion Architecture (Multi-hop) - Divvy Bikes
 
 It uses a multi-hop architecture, meaning we have bronze, silver, and gold layers.
 
