@@ -32,8 +32,11 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = self.spark.read.format('json').load(bronze_path_raw_data+'/free_bike_status/')\
-                 .select(explode('data.bikes').alias('bikes'), 'last_updated')
+        df = (self.spark.table('bronze.divvy_free_bike_status')
+              .orderBy(col('last_updated_ts'), ascending=False)
+              .limit(1)
+              .select(explode('data.bikes').alias('bikes'), 'last_updated'))
+
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -65,8 +68,10 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = self.spark.read.format('json').load(bronze_path_raw_data+'/station_information/')\
-                 .select(explode('data.stations').alias('stations'), 'last_updated')
+        df = (self.spark.table('bronze.divvy_station_information')
+              .orderBy(col('last_updated_ts'), ascending=False)
+              .limit(1)
+              .select(explode('data.stations').alias('stations'), 'last_updated'))
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -96,8 +101,10 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = self.spark.read.format('json').load(bronze_path_raw_data+'/station_status/')\
-                 .select(explode('data.stations').alias('stations'), 'last_updated')
+        df = (self.spark.table('bronze.divvy_station_status')
+              .orderBy(col('last_updated_ts'), ascending=False)
+              .limit(1)
+              .select(explode('data.stations').alias('stations'), 'last_updated'))
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -138,8 +145,10 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = self.spark.read.format('json').load(bronze_path_raw_data+'/system_pricing_plan/')\
-                 .select(explode('data.plans').alias('plans'), 'last_updated')
+        df = (self.spark.table('bronze.divvy_system_pricing_plan')
+              .orderBy(col('last_updated_ts'), ascending=False)
+              .limit(1)
+              .select(explode('data.plans').alias('plans'), 'last_updated'))
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -170,8 +179,10 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = self.spark.read.format('json').load(bronze_path_raw_data+'/vehicle_types/')\
-                 .select(explode('data.vehicle_types').alias('vehicle_types'), 'last_updated')
+        df = (self.spark.table('bronze.divvy_vehicle_types')
+              .orderBy(col('last_updated_ts'), ascending=False)
+              .limit(1)
+              .select(explode('data.vehicle_types').alias('vehicle_types'), 'last_updated'))
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 

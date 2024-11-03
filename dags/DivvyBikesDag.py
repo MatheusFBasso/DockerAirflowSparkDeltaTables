@@ -14,6 +14,14 @@ def divvy_set_delta_tables():
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+def divvy_bronze():
+    print(f'STARTING'.rjust(120, '.'))
+    DivvyBikesCall('bronze_raw_data')
+    print(f'FINISHED'.rjust(120, '.'))
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 def divvy_get_bike_status():
     print(f'STARTING'.rjust(120, '.'))
     DivvyBikesCall('divvy_get_bike_status')
@@ -184,6 +192,11 @@ with DAG(
     tags=['DivvyBikes']
 ) as dag:
     # ------------------------------------------------------------------------------------------------------------------
+    divvy_bronze = PythonOperator(
+        task_id='divvy_bronze',
+        python_callable=divvy_bronze,
+    )
+    # ------------------------------------------------------------------------------------------------------------------
     divvy_get_bike_status = PythonOperator(
         task_id='GetBikeStatus',
         python_callable=divvy_get_bike_status
@@ -326,15 +339,21 @@ with DAG(
     )
     # ------------------------------------------------------------------------------------------------------------------
 
-    divvy_set_delta_tables >> silver_station_information >> divvy_clean_station_information >> gold_station_information
-    divvy_set_delta_tables >> silver_bike_status >> divvy_clean_bike_status >> gold_bike_status
-    divvy_set_delta_tables >> silver_system_pricing >> divvy_clean_system_pricing >> gold_system_pricing
-    divvy_set_delta_tables >> silver_station_staus >> divvy_clean_station_staus >> gold_station_staus
-    divvy_set_delta_tables >> silver_vehicle_types >> divvy_clean_vehicle_types >> gold_vehicle_types
+    divvy_set_delta_tables >> silver_station_information >> gold_station_information
+    divvy_set_delta_tables >> silver_bike_status >> gold_bike_status
+    divvy_set_delta_tables >> silver_system_pricing >> gold_system_pricing
+    divvy_set_delta_tables >> silver_station_staus >> gold_station_staus
+    divvy_set_delta_tables >> silver_vehicle_types >> gold_vehicle_types
 
-    pre_divvy_clean_system_pricing >> divvy_get_system_pricing >> divvy_set_delta_tables
-    pre_divvy_clean_station_staus >> divvy_get_station_staus >> divvy_set_delta_tables
-    pre_divvy_clean_station_information >> divvy_get_station_information >> divvy_set_delta_tables
-    pre_divvy_clean_bike_status >> divvy_get_bike_status >> divvy_set_delta_tables
-    pre_divvy_clean_vehicle_types >> divvy_get_vehicle_types >> divvy_set_delta_tables
+    divvy_bronze >> divvy_clean_station_information
+    divvy_bronze >> divvy_clean_bike_status
+    divvy_bronze >> divvy_clean_system_pricing
+    divvy_bronze >> divvy_clean_station_staus
+    divvy_bronze >> divvy_clean_vehicle_types
+
+    pre_divvy_clean_system_pricing >> divvy_get_system_pricing >> divvy_bronze >> divvy_set_delta_tables
+    pre_divvy_clean_station_staus >> divvy_get_station_staus >> divvy_bronze >> divvy_set_delta_tables
+    pre_divvy_clean_station_information >> divvy_get_station_information >> divvy_bronze >> divvy_set_delta_tables
+    pre_divvy_clean_bike_status >> divvy_get_bike_status >> divvy_bronze >> divvy_set_delta_tables
+    pre_divvy_clean_vehicle_types >> divvy_get_vehicle_types >> divvy_bronze >> divvy_set_delta_tables
 
