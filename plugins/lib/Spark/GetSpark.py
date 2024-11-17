@@ -33,7 +33,7 @@ class DeltaSpark(Now):
         # --------------------------------------------------------------------------------------------------------------
         spark = configure_spark_with_delta_pip(builder).getOrCreate()
         spark.sparkContext.setLogLevel('ERROR')
-        spark.conf.set("spark.sql.shuffle.partitions", 8)
+        spark.conf.set("spark.sql.shuffle.partitions", 500)
         # --------------------------------------------------------------------------------------------------------------
         delta_version_info = f' Version = 3.5.3 '.ljust(20, ' ')
         pyspark_version_info = f'Version = 3.2.1 '.ljust(20, ' ')

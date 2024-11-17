@@ -1,34 +1,34 @@
-from pyspark.sql.functions import explode, cast, col, lit
-from datetime import datetime
-from pyspark.sql.types import DateType, DoubleType, StringType, BooleanType, TimestampType, LongType
-from lib.Spark.GetSpark import DeltaSpark
 from lib.utils.Now import Now
-from lib.utils.DivvyBikes.divvy_bikes_path import bronze_path_raw_data
 from delta.tables import DeltaTable
+from pyspark.sql.functions import col
+from lib.Spark.GetSpark import DeltaSpark
+from lib.utils.DivvyBikes.LogProcess import LogProcess
 
 
 class Gold(Now):
 
     _SHOW_LOG = True
+    _START_TIME = Now().now_datetime()
 
     def __init__(self):
 
         self.spark = DeltaSpark().initialize()
 
         print(f"┌{'─' * 118}┐")
-        print(f"│{' ' * 32}                                                    {' ' * 33}│")
-        print(f"│{' ' * 32}                                                    {' ' * 33}│")
-        print(f"│{' ' * 32}   █████████     ███████    █████       ██████████  {' ' * 33}│")
-        print(f"│{' ' * 32}  ███░░░░░███  ███░░░░░███ ░░███       ░░███░░░░███ {' ' * 33}│")
-        print(f"│{' ' * 32} ███     ░░░  ███     ░░███ ░███        ░███   ░░███{' ' * 33}│")
-        print(f"│{' ' * 32}░███         ░███      ░███ ░███        ░███    ░███{' ' * 33}│")
-        print(f"│{' ' * 32}░███    █████░███      ░███ ░███        ░███    ░███{' ' * 33}│")
-        print(f"│{' ' * 32}░░███  ░░███ ░░███     ███  ░███      █ ░███    ███ {' ' * 33}│")
-        print(f"│{' ' * 32} ░░█████████  ░░░███████░   ███████████ ██████████  {' ' * 33}│")
-        print(f"│{' ' * 32}  ░░░░░░░░░     ░░░░░░░    ░░░░░░░░░░░ ░░░░░░░░░░   {' ' * 33}│")
-        print(f"│{' ' * 32}                                                    {' ' * 33}│")
-        print(f"│{' ' * 32}                                                    {' ' * 33}│")
+        print(f"│{' ' * 32}                                                    {' ' * 34}│")
+        print(f"│{' ' * 32}                                                    {' ' * 34}│")
+        print(f"│{' ' * 32}   █████████     ███████    █████       ██████████  {' ' * 34}│")
+        print(f"│{' ' * 32}  ███░░░░░███  ███░░░░░███ ░░███       ░░███░░░░███ {' ' * 34}│")
+        print(f"│{' ' * 32} ███     ░░░  ███     ░░███ ░███        ░███   ░░███{' ' * 34}│")
+        print(f"│{' ' * 32}░███         ░███      ░███ ░███        ░███    ░███{' ' * 34}│")
+        print(f"│{' ' * 32}░███    █████░███      ░███ ░███        ░███    ░███{' ' * 34}│")
+        print(f"│{' ' * 32}░░███  ░░███ ░░███     ███  ░███      █ ░███    ███ {' ' * 34}│")
+        print(f"│{' ' * 32} ░░█████████  ░░░███████░   ███████████ ██████████  {' ' * 34}│")
+        print(f"│{' ' * 32}  ░░░░░░░░░     ░░░░░░░    ░░░░░░░░░░░ ░░░░░░░░░░   {' ' * 34}│")
+        print(f"│{' ' * 32}                                                    {' ' * 34}│")
+        print(f"│{' ' * 32}                                                    {' ' * 34}│")
         print(f"└{'─' * 118}┘")
+        print(self._START_TIME)
 
     def gold_bike_status(self):
         # --------------------------------------------------------------------------------------------------------------
@@ -41,6 +41,7 @@ class Gold(Now):
                         .agg({"last_updated_ts": "max"})
                         .withColumnRenamed('max(last_updated_ts)', 'last_updated_ts')
                         .alias('as'), on=['last_updated_ts'], how='inner'))
+        
         self.log_message(show=self._SHOW_LOG, message='READING SILVER DATA | silver.divvy_bikes_status | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -77,6 +78,13 @@ class Gold(Now):
 
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | gold.divvy_bikes_status_now | OK', end=True)
 
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_bikes_status',
+        #            database='gold',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
+
         self.spark.stop()
 
     def gold_station_information(self):
@@ -91,6 +99,7 @@ class Gold(Now):
                         .agg({"last_updated_ts": "max"})
                         .withColumnRenamed('max(last_updated_ts)', 'last_updated_ts')
                         .alias('as_now'), on=['last_updated_ts'], how='inner'))
+        
         self.log_message(show=self._SHOW_LOG, message='READING SILVER DATA | silver.divvy_station_information | OK',
                          end=True)
         # --------------------------------------------------------------------------------------------------------------
@@ -125,6 +134,13 @@ class Gold(Now):
         self.log_message(show=self._SHOW_LOG,
                          message='SAVING DATA | gold.divvy_station_information_now | OK', end=True)
 
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_station_information_now',
+        #            database='gold',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
+
         self.spark.stop()
 
     def gold_station_status(self):
@@ -138,6 +154,8 @@ class Gold(Now):
                         .agg({"last_updated_ts": "max"})
                         .withColumnRenamed('max(last_updated_ts)', 'last_updated_ts')
                         .alias('as_now'), on=['last_updated_ts'], how='inner'))
+
+        
         self.log_message(show=self._SHOW_LOG, message='READING SILVER DATA | silver.divvy_station_status | OK',
                          end=True)
         # --------------------------------------------------------------------------------------------------------------
@@ -188,6 +206,13 @@ class Gold(Now):
         self.log_message(show=self._SHOW_LOG,
                          message='SAVING DATA | gold.station_status_now | OK', end=True)
 
+        # LogProcess(spark=self.spark,
+        #            table_name='station_status_now',
+        #            database='gold',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
+
         self.spark.stop()
 
     def gold_system_pricing_plan(self):
@@ -202,6 +227,7 @@ class Gold(Now):
                         .agg({"last_updated_ts": "max"})
                         .withColumnRenamed('max(last_updated_ts)', 'last_updated_ts')
                         .alias('as_now'), on=['last_updated_ts'], how='inner'))
+        
         self.log_message(show=self._SHOW_LOG, message='READING SILVER DATA | silver.divvy_system_pricing_plan | OK',
                          end=True)
         # --------------------------------------------------------------------------------------------------------------
@@ -238,6 +264,13 @@ class Gold(Now):
         self.log_message(show=self._SHOW_LOG,
                          message='SAVING DATA | gold.divvy_system_pricing_plan_now | OK', end=True)
 
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_system_pricing_plan_now',
+        #            database='gold',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
+
         self.spark.stop()
 
     def gold_vehicle_types(self):
@@ -251,6 +284,7 @@ class Gold(Now):
                         .agg({"last_updated_ts": "max"})
                         .withColumnRenamed('max(last_updated_ts)', 'last_updated_ts')
                         .alias('as_now'), on=['last_updated_ts'], how='inner'))
+        
         self.log_message(show=self._SHOW_LOG, message='READING SILVER DATA | silver.divvy_vehicle_types | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -277,5 +311,12 @@ class Gold(Now):
 
         self.log_message(show=self._SHOW_LOG,
                          message='SAVING DATA | gold.divvy_vehicle_types_now | OK', end=True)
+
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_vehicle_types_now',
+        #            database='gold',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
 
         self.spark.stop()
