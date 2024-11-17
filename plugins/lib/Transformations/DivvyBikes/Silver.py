@@ -1,32 +1,32 @@
-from pyspark.sql.functions import explode, cast, col, lit
-from datetime import datetime
-from pyspark.sql.types import DateType, DoubleType, StringType, BooleanType, TimestampType, LongType
-from lib.Spark.GetSpark import DeltaSpark
 from lib.utils.Now import Now
-from lib.utils.DivvyBikes.divvy_bikes_path import bronze_path_raw_data
-from delta.tables import DeltaTable
+from lib.Spark.GetSpark import DeltaSpark
+from pyspark.sql.functions import explode, col
+from lib.utils.DivvyBikes.LogProcess import LogProcess
+from pyspark.sql.types import DoubleType, StringType, BooleanType, TimestampType, LongType
 
 
 class Silver(Now):
 
     _SHOW_LOG = True
+    _START_TIME = Now().now_datetime()
 
     def __init__(self):
 
         self.spark = DeltaSpark().initialize()
 
         print(f"┌{'─' * 118}┐")
-        print(f"│{' ' * 24}                                                                             {' ' * 17}│")
-        print(f"│{' ' * 24}  █████████  █████ █████       █████   █████ ██████████ ███████████          {' ' * 17}│")
-        print(f"│{' ' * 24} ███░░░░░███░░███ ░░███       ░░███   ░░███ ░░███░░░░░█░░███░░░░░███         {' ' * 17}│")
-        print(f"│{' ' * 24}░███    ░░░  ░███  ░███        ░███    ░███  ░███  █ ░  ░███    ░███         {' ' * 17}│")
-        print(f"│{' ' * 24}░░█████████  ░███  ░███        ░███    ░███  ░██████    ░██████████          {' ' * 17}│")
-        print(f"│{' ' * 24} ░░░░░░░░███ ░███  ░███        ░░███   ███   ░███░░█    ░███░░░░░███         {' ' * 17}│")
-        print(f"│{' ' * 24} ███    ░███ ░███  ░███      █  ░░░█████░    ░███ ░   █ ░███    ░███         {' ' * 17}│")
-        print(f"│{' ' * 24}░░█████████  █████ ███████████    ░░███      ██████████ █████   █████        {' ' * 17}│")
-        print(f"│{' ' * 24} ░░░░░░░░░  ░░░░░ ░░░░░░░░░░░      ░░░      ░░░░░░░░░░ ░░░░░   ░░░░░         {' ' * 17}│")
-        print(f"│{' ' * 24}                                                                             {' ' * 17}│")
+        print(f"│{' ' * 24}                                                                     {' ' * 25}│")
+        print(f"│{' ' * 24}  █████████  █████ █████       █████   █████ ██████████ ███████████  {' ' * 25}│")
+        print(f"│{' ' * 24} ███░░░░░███░░███ ░░███       ░░███   ░░███ ░░███░░░░░█░░███░░░░░███ {' ' * 25}│")
+        print(f"│{' ' * 24}░███    ░░░  ░███  ░███        ░███    ░███  ░███  █ ░  ░███    ░███ {' ' * 25}│")
+        print(f"│{' ' * 24}░░█████████  ░███  ░███        ░███    ░███  ░██████    ░██████████  {' ' * 25}│")
+        print(f"│{' ' * 24} ░░░░░░░░███ ░███  ░███        ░░███   ███   ░███░░█    ░███░░░░░███ {' ' * 25}│")
+        print(f"│{' ' * 24} ███    ░███ ░███  ░███      █  ░░░█████░    ░███ ░   █ ░███    ░███ {' ' * 25}│")
+        print(f"│{' ' * 24}░░█████████  █████ ███████████    ░░███      ██████████ █████   █████{' ' * 25}│")
+        print(f"│{' ' * 24} ░░░░░░░░░  ░░░░░ ░░░░░░░░░░░      ░░░      ░░░░░░░░░░ ░░░░░   ░░░░░ {' ' * 25}│")
+        print(f"│{' ' * 24}                                                                     {' ' * 25}│")
         print(f"└{'─' * 118}┘")
+        print(self._START_TIME)
 
     def silver_bike_status(self):
 
@@ -35,7 +35,7 @@ class Silver(Now):
         df = (self.spark.table('bronze.divvy_free_bike_status')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
-              .select(explode('data.bikes').alias('bikes'), 'last_updated'))
+              .select(explode('data.bikes').alias('bikes'), 'last_updated').distinct())
 
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
@@ -52,6 +52,7 @@ class Silver(Now):
                        col('bikes.is_disabled').cast(BooleanType()).alias('is_disabled'),
                        col('last_updated').cast(LongType()).alias('last_updated'))\
                .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
+        
         self.log_message(show=self._SHOW_LOG, message='TRANSFORMING DATA | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -61,7 +62,12 @@ class Silver(Now):
           .insertInto('silver.divvy_bikes_status')
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_bikes_status | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
-
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_bikes_status',
+        #            database='silver',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
         self.spark.stop()
 
     def silver_station_information(self):
@@ -71,7 +77,7 @@ class Silver(Now):
         df = (self.spark.table('bronze.divvy_station_information')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
-              .select(explode('data.stations').alias('stations'), 'last_updated'))
+              .select(explode('data.stations').alias('stations'), 'last_updated').distinct())
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -85,6 +91,7 @@ class Silver(Now):
                        col('stations.rental_uris').cast(StringType()).alias('rental_uris'),
                        col('last_updated').cast(LongType()).alias('last_updated'))\
                .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
+        
         self.log_message(show=self._SHOW_LOG, message='TRANSFORMING DATA | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -94,7 +101,12 @@ class Silver(Now):
           .insertInto('silver.divvy_station_information')
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_station_information | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
-
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_station_information',
+        #            database='silver',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
         self.spark.stop()
 
     def silver_station_status(self):
@@ -104,7 +116,7 @@ class Silver(Now):
         df = (self.spark.table('bronze.divvy_station_status')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
-              .select(explode('data.stations').alias('stations'), 'last_updated'))
+              .select(explode('data.stations').alias('stations'), 'last_updated').distinct())
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -127,6 +139,8 @@ class Silver(Now):
                        )\
                .withColumn('last_updated_ts', col('last_updated').cast(TimestampType())) \
                .withColumn('last_reported_ts', col('last_reported').cast(TimestampType()))
+
+        
         self.log_message(show=self._SHOW_LOG, message='TRANSFORMING DATA | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -138,7 +152,12 @@ class Silver(Now):
         # --------------------------------------------------------------------------------------------------------------
 
         # --------------------------------------------------------------------------------------------------------------
-
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_station_status',
+        #            database='silver',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
         self.spark.stop()
 
     def silver_system_pricing_plan(self):
@@ -148,7 +167,7 @@ class Silver(Now):
         df = (self.spark.table('bronze.divvy_system_pricing_plan')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
-              .select(explode('data.plans').alias('plans'), 'last_updated'))
+              .select(explode('data.plans').alias('plans'), 'last_updated').distinct())
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -163,6 +182,7 @@ class Silver(Now):
                        col('plans.per_min_pricing').cast(StringType()).alias('per_min_pricing'),
                        col('last_updated').cast(LongType()).alias('last_updated'),
                        )
+        
         self.log_message(show=self._SHOW_LOG, message='TRANSFORMING DATA | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -172,7 +192,12 @@ class Silver(Now):
           .insertInto('silver.divvy_system_pricing_plan')
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_system_pricing_plan | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
-
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_system_pricing_plan',
+        #            database='silver',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
         self.spark.stop()
 
     def silver_vehicle_types(self):
@@ -182,7 +207,7 @@ class Silver(Now):
         df = (self.spark.table('bronze.divvy_vehicle_types')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
-              .select(explode('data.vehicle_types').alias('vehicle_types'), 'last_updated'))
+              .select(explode('data.vehicle_types').alias('vehicle_types'), 'last_updated').distinct())
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -193,6 +218,7 @@ class Silver(Now):
                        col('vehicle_types.vehicle_type_id').cast(StringType()).alias('vehicle_type_id'),
                        col('last_updated').cast(LongType()).alias('last_updated'),
                        )
+        
         self.log_message(show=self._SHOW_LOG, message='TRANSFORMING DATA | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -202,5 +228,10 @@ class Silver(Now):
           .insertInto('silver.divvy_vehicle_types')
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_vehicle_types | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
-
+        # LogProcess(spark=self.spark,
+        #            table_name='divvy_vehicle_types',
+        #            database='silver',
+        #            rows_inserted=df.count(),
+        #            start_time=self._START_TIME
+        #            ).process()
         self.spark.stop()

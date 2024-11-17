@@ -12,6 +12,10 @@ class Now:
     def now(timezone='America/Sao_Paulo') -> str:
         return datetime.now(pytz.timezone(timezone)).strftime('%Y-%m-%dT%H:%M:%S')
 
+    @staticmethod
+    def now_datetime(timezone='America/Sao_Paulo'):
+        return datetime.now(pytz.timezone(timezone))
+
     ####################################################################################################################
     def log_message(self, message: str, start: bool = False, end: bool = False, sep: str = '-', line_length: int = 120,
                     show: bool = True) -> None:
