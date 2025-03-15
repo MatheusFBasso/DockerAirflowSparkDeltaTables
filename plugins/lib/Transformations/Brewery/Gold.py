@@ -1,4 +1,5 @@
 from lib.Spark.GetSpark import DeltaSpark
+from delta.tables import DeltaTable
 from lib.utils.Now import Now
 from pyspark.sql.functions import col, lit, cast
 from pyspark.sql.types import DateType
@@ -26,9 +27,7 @@ class GoldTables(Now):
         print(f"└{'─' * 118}┘")
 
         # --------------------------------------------------------------------------------------------------------------
-        self.log_message(show=self._SHOW_LOG, message='GETTING SILVER DATA', start=True)
-        df = self.spark.sql('SELECT * FROM silver.brewery_daily')
-        self.log_message(show=self._SHOW_LOG, message='GETTING SILVER DATA | OK', end=True)
+        df = self.spark.read.format('delta').load('./warehouse/silver.db/brewery_daily')
         # --------------------------------------------------------------------------------------------------------------
 
         # --------------------------------------------------------------------------------------------------------------
@@ -49,7 +48,7 @@ class GoldTables(Now):
                                     how='left').withColumnRenamed('count', 'Total')
                                   .orderBy('Total', ascending=False))
 
-        self.spark.sql("""CREATE DATABASE IF NOT EXISTS gold""")
+        # self.spark.sql("""CREATE DATABASE IF NOT EXISTS gold""")
 
         lit_date = datetime.strptime(Now().now(), "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d')
         df_final = df_final.withColumn('dat_ref_carga', lit(lit_date).cast(DateType()))
@@ -63,6 +62,6 @@ class GoldTables(Now):
                 .mode('overwrite') \
                 .option("overwriteSchema", "True")\
                 .partitionBy('dat_ref_carga')\
-                .saveAsTable('gold.countries_brewery_type_num')
+                .save('./warehouse/gold.db/countries_brewery_type_num')
         self.log_message(show=self._SHOW_LOG, message='SAVING gold.countries_brewery_type_num | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
