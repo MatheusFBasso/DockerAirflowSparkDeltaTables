@@ -5,19 +5,15 @@ from lib.Spark.GetSpark import DeltaSpark
 from lib.utils.Now import Now
 from lib.utils.DivvyBikes.divvy_bikes_path import bronze_path_raw_data
 from delta.tables import DeltaTable
+from time import sleep
 
 
-class Bronze(Now):
+class BronzeRevised(Now):
 
     _SHOW_LOG = True
 
-    DIVVY_DICT = {'free_bike_status': ('bikes',),
-                  'station_information': ('stations',),
-                  'station_status': ('stations',),
-                  'system_pricing_plan': ('plans',),
-                  'vehicle_types': ('vehicle_types',)}
-
     BRONZE_SCHEMA = StructType([
+            StructField('type', StringType(), False),
             StructField('data', StringType(), False),
             StructField('last_updated', LongType(), False),
             StructField('ttl', LongType(), False),
@@ -46,57 +42,57 @@ class Bronze(Now):
 
         self.spark.sql("""CREATE DATABASE IF NOT EXISTS bronze""")
 
-        for table_info in self.DIVVY_DICT.items():
+        # self.spark.sql("""CREATE TABLE IF NOT EXISTS bronze.divvy_bikes""")
 
-            if not DeltaTable.isDeltaTable(self.spark, f'./warehouse/bronze.db/divvy_{table_info[0]}'):
+        if not DeltaTable.isDeltaTable(self.spark, f'./warehouse/bronze.db/divvy_bikes'):
 
-                self.log_message(show=self._SHOW_LOG,
-                                 message=f'CREATING RAW DELTA TABLES | bronze.divvy_{table_info[0]}',
-                                 start=True)
+            self.log_message(show=self._SHOW_LOG,
+                             message=f'CREATING RAW DELTA TABLE | bronze.divvy_bikes',
+                             start=True)
 
-                empty_info_df = self.spark.createDataFrame([], self.BRONZE_SCHEMA)
-                empty_info_df.write.format('delta') \
-                    .mode('overwrite') \
-                    .option("overwriteSchema", "True") \
-                    .save(f'./warehouse/bronze.db/divvy_{table_info[0]}')
+            empty_info_df = self.spark.createDataFrame([], self.BRONZE_SCHEMA)
+            empty_info_df.write.format('delta') \
+                .mode('overwrite') \
+                .option("overwriteSchema", "True") \
+                .saveAsTable(f"bronze.divvy_bikes")
 
-                self.log_message(show=self._SHOW_LOG,
-                                 message=f'CREATING RAW DELTA TABLES | bronze.divvy_{table_info[0]} | OK',
-                                 end=True)
-
-        self.log_message(show=self._SHOW_LOG, message='CREATING RAW DELTA TABLES | OK', start=True, end=True)
-
-    def load_all_data_to_bronze(self):
+            self.log_message(show=self._SHOW_LOG,
+                             message=f'CREATING RAW DELTA TABLES | bronze.divvy_bikes | OK',
+                             end=True)
 
         self.log_message(show=self._SHOW_LOG, message='SAVING BRONZE RAW DATA', start=True, end=True)
 
-        # self.spark.sql("""CREATE DATABASE IF NOT EXISTS bronze""")
 
-        for table_info in self.DIVVY_DICT.items():
-            self.log_message(show=self._SHOW_LOG,
-                             message=f'LOADING DATA | {table_info[0]}.json -> bronze.divvy_{table_info[0]}',
-                             start=True)
-
-            if not DeltaTable.isDeltaTable(self.spark, f'./warehouse/bronze.db/divvy_{table_info[0]}'):
-
-                (self.spark.read.format('json').load(bronze_path_raw_data + '/' + table_info[0] + '/')
-                 .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
-                 .select('data', 'last_updated', 'ttl', 'version', 'last_updated_ts')
-                 .write.format('delta').option("overwriteSchema", "True")
-                 .save(f'./warehouse/bronze.db/divvy_{table_info[0]}'))
-
-            else:
-                df = (self.spark.read.format('json').load(bronze_path_raw_data + '/' + table_info[0] + '/')
-                           .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
-                           .select('data', 'last_updated', 'ttl', 'version', 'last_updated_ts'))
-
-                (df.write.format('delta').option("overwriteSchema", "True")
-                           .mode('append')
-                           .save(f'./warehouse/bronze.db/divvy_{table_info[0]}'))
+    def load_raw_data_to_bronze(self, divvy_path):
 
 
-            self.log_message(show=self._SHOW_LOG,
-                             message=f'LOADING DATA | {table_info[0]}.json -> bronze.divvy_{table_info[0]} | OK',
-                             end=True)
+        self.log_message(show=self._SHOW_LOG,
+                         message=f'LOADING DATA | {divvy_path}.json -> bronze.divvy_divvy_bikes',
+                         start=True)
+
+        if not DeltaTable.isDeltaTable(self.spark, f'./warehouse/bronze.db/divvy_divvy_bikes'):
+
+            (self.spark.read.format('json').load(bronze_path_raw_data + '/' + divvy_path + '/')
+             .withColumn('type', lit(divvy_path))
+             .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
+             .select('data', 'last_updated', 'ttl', 'version', 'last_updated_ts')
+             .write.format('delta').option("overwriteSchema", "True")
+             .saveAsTable(f'bronze.divvy_bikes'))
+
+        else:
+            df = (self.spark.read.format('json').load(bronze_path_raw_data + '/' + divvy_path + '/')
+                       .withColumn('type', lit(divvy_path))
+                       .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
+                       .select('type', 'data', 'last_updated', 'ttl', 'version', 'last_updated_ts'))
+
+            print(self.spark.table('bronze.divvy_bikes').columns)
+
+            (df.write.format('delta').option("overwriteSchema", "True")
+                       .insertInto(f'bronze.divvy_bikes'))
+
+
+        self.log_message(show=self._SHOW_LOG,
+                         message=f'LOADING DATA | {divvy_path}.json -> bronze.divvy_{divvy_path} | OK',
+                         end=True)
 
         self.log_message(show=self._SHOW_LOG, message='SAVING BRONZE RAW DATA | OK', start=True, end=True)

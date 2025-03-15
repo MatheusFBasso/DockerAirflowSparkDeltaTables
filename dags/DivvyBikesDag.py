@@ -18,8 +18,18 @@ def divvy_bronze():
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+def divvy_bronze_revised_create():
+    DivvyBikesCall('bronze_raw_data_revised_create')
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 def divvy_get_bike_status():
     DivvyBikesCall('divvy_get_bike_status')
+
+
+def bronze_load_bike_status():
+    DivvyBikesCall('bronze_load_revised', divvy_path='free_bike_status')
 
 
 def silver_bike_status():
@@ -44,6 +54,10 @@ def divvy_get_station_information():
     DivvyBikesCall('divvy_get_station_information')
 
 
+def bronze_load_station_information():
+    DivvyBikesCall('bronze_load_revised', divvy_path='station_information')
+
+
 def silver_station_information():
     DivvyBikesCall('silver_station_information')
 
@@ -66,6 +80,10 @@ def divvy_get_station_staus():
     DivvyBikesCall('divvy_get_station_status')
 
 
+def bronze_load_station_status():
+    DivvyBikesCall('bronze_load_revised', divvy_path='station_status')
+
+
 def silver_station_staus():
     DivvyBikesCall('silver_station_status')
 
@@ -85,6 +103,10 @@ def pre_divvy_clean_station_staus():
 # ----------------------------------------------------------------------------------------------------------------------
 def divvy_get_system_pricing():
     DivvyBikesCall('divvy_get_system_pricing')
+
+
+def bronze_load_system_pricing():
+    DivvyBikesCall('bronze_load_revised', divvy_path='system_pricing_plan')
 
 
 def silver_system_pricing():
@@ -109,6 +131,10 @@ def divvy_get_vehicle_types():
     DivvyBikesCall('divvy_get_vehicle_types')
 
 
+def bronze_load_vehicle_types():
+    DivvyBikesCall('bronze_load_revised', divvy_path='vehicle_types')
+
+
 def silver_vehicle_types():
     DivvyBikesCall('silver_vehicle_types')
 
@@ -129,8 +155,8 @@ def pre_divvy_clean_vehicle_types():
 # ----------------------------------------------------------------------------------------------------------------------
 with DAG(
     dag_id='DivvyBikesDag',
-    schedule_interval='*/10 * * * *',
-    concurrency=2,
+    schedule_interval='*/20 * * * *',
+    concurrency=5,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
     orientation='TB',
@@ -146,12 +172,26 @@ with DAG(
         python_callable=divvy_bronze,
         task_concurrency=1,
     )
+    # divvy_bronze_revised_create = PythonOperator(
+    #     task_id='DIvvyBronzeCreateTable',
+    #     python_callable=divvy_bronze_revised_create,
+    #     task_concurrency=1,
+    # )
     # ------------------------------------------------------------------------------------------------------------------
     divvy_get_bike_status = PythonOperator(
         task_id='GetBikeStatus',
         python_callable=divvy_get_bike_status,
         task_concurrency=1,
     )
+    # bronze_load_bike_status = PythonOperator(
+    #     task_id='BronzeLoadStationStatus',
+    #     python_callable=bronze_load_bike_status,
+    #     task_concurrency=1,
+    #     retries=2,
+    #     show_return_value_in_logs=False,
+    #     retry_delay=5,
+    #     priority_weight=1
+    # )
     silver_bike_status = PythonOperator(
         task_id='SilverBikeStatus',
         python_callable=silver_bike_status,
@@ -188,6 +228,14 @@ with DAG(
         python_callable=divvy_get_station_information,
         task_concurrency=1,
     )
+    # bronze_load_station_information = PythonOperator(
+    #     task_id='BronzeLoadStationInformation',
+    #     python_callable=bronze_load_station_information,
+    #     task_concurrency=1,
+    #     retries=2,
+    #     show_return_value_in_logs=False,
+    #     retry_delay=5,
+    # )
     silver_station_information = PythonOperator(
         task_id='SilverStationInformation',
         python_callable=silver_station_information,
@@ -225,6 +273,14 @@ with DAG(
         python_callable=divvy_get_station_staus,
         task_concurrency=1,
     )
+    # bronze_load_station_status = PythonOperator(
+    #     task_id='BronzeLoadStatusStatus',
+    #     python_callable=bronze_load_station_status,
+    #     task_concurrency=1,
+    #     retries=2,
+    #     show_return_value_in_logs=False,
+    #     retry_delay=5,
+    # )
     silver_station_staus = PythonOperator(
         task_id='SilverStationStatus',
         python_callable=silver_station_staus,
@@ -262,6 +318,14 @@ with DAG(
         python_callable=divvy_get_system_pricing,
         task_concurrency=1,
     )
+    # bronze_load_system_pricing = PythonOperator(
+    #     task_id='BronzeLoadSystemPricing',
+    #     python_callable=bronze_load_system_pricing,
+    #     task_concurrency=1,
+    #     retries=2,
+    #     show_return_value_in_logs=False,
+    #     retry_delay=5,
+    # )
     silver_system_pricing = PythonOperator(
         task_id='SilverSystemPricing',
         python_callable=silver_system_pricing,
@@ -299,6 +363,14 @@ with DAG(
         python_callable=divvy_get_vehicle_types,
         task_concurrency=1,
     )
+    # bronze_load_vehicle_types = PythonOperator(
+    #     task_id='BronzeLoadVehicleTypes',
+    #     python_callable=bronze_load_vehicle_types,
+    #     task_concurrency=1,
+    #     retries=2,
+    #     show_return_value_in_logs=False,
+    #     retry_delay=5,
+    # )
     silver_vehicle_types = PythonOperator(
         task_id='SilverVehicleTypes',
         python_callable=silver_vehicle_types,
@@ -350,6 +422,12 @@ with DAG(
     divvy_bronze >> divvy_clean_system_pricing
     divvy_bronze >> divvy_clean_station_staus
     divvy_bronze >> divvy_clean_vehicle_types
+
+    # divvy_get_system_pricing >> divvy_bronze_revised_create >> bronze_load_system_pricing >> divvy_bronze
+    # divvy_get_station_staus >> divvy_bronze_revised_create >> bronze_load_station_status >> divvy_bronze
+    # divvy_get_station_information >>divvy_bronze_revised_create >> bronze_load_station_information >> divvy_bronze
+    # divvy_get_bike_status >> divvy_bronze_revised_create >> bronze_load_bike_status >> divvy_bronze
+    # divvy_get_vehicle_types >> divvy_bronze_revised_create >> bronze_load_vehicle_types >> divvy_bronze
 
     pre_divvy_clean_system_pricing >> divvy_get_system_pricing >> divvy_bronze >> divvy_set_delta_tables
     pre_divvy_clean_station_staus >> divvy_get_station_staus >> divvy_bronze >> divvy_set_delta_tables

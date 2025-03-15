@@ -1,5 +1,5 @@
 pip>=23.3.2
-pyspark==3.5.3
+pyspark==3.5.5
 delta-spark==3.2.1
-pytz==2024.1
+pytz==2025.1
 requests==2.31.0

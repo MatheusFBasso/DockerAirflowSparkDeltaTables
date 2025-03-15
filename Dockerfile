@@ -1,4 +1,4 @@
-FROM apache/airflow:2.10.2-python3.11
+FROM apache/airflow:2.10.5-python3.11
 
 ENV PIP_USER=false
 COPY requirements.txt /requirements.txt
@@ -13,7 +13,7 @@ RUN apt update && \
     apt-get clean;
 
 # Set JAVA_HOME
-ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64/
 RUN export JAVA_HOME
 
 USER airflow

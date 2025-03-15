@@ -35,8 +35,8 @@ class DeltaSpark(Now):
         spark.sparkContext.setLogLevel('ERROR')
         spark.conf.set("spark.sql.shuffle.partitions", 500)
         # --------------------------------------------------------------------------------------------------------------
-        delta_version_info = f' Version = 3.5.3 '.ljust(20, ' ')
-        pyspark_version_info = f'Version = 3.2.1 '.ljust(20, ' ')
+        delta_version_info = f' '.ljust(20, ' ')
+        pyspark_version_info = f' '.ljust(20, ' ')
         # --------------------------------------------------------------------------------------------------------------
         print(f"┌{'─'*118}┐")
         print(f"│     █████████                            █████      {' ' * 65}│")

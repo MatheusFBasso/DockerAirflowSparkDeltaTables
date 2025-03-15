@@ -2,6 +2,7 @@ from lib.Transformations.DivvyBikes.TableCreation import SetDeltaTables
 from lib.APIs.DivvyBikes_api import DivvyBikes
 from lib.utils.DivvyBikes.CleanRawData import CleanRawData
 from lib.Transformations.DivvyBikes.Bronze import Bronze
+from lib.Transformations.DivvyBikes.BronzeRevised import BronzeRevised
 from lib.Transformations.DivvyBikes.Silver import Silver
 from lib.Transformations.DivvyBikes.Gold import Gold
 
@@ -16,6 +17,8 @@ class DivvyBikesCall:
         map_function = {
             'clean_raw_data': cls.clean_raw_data_aux,
             'bronze_raw_data': cls.bronze_aux,
+            'bronze_raw_data_revised_create': cls.bronze_revised_aux,
+            'bronze_load_revised': cls.bronze_revised_load_data_aux,
             'divvy_set_delta_tables': cls.set_delta_tables_aux,
 
             'divvy_get_bike_status': cls.get_bike_status_aux,
@@ -51,6 +54,20 @@ class DivvyBikesCall:
         bronze = Bronze()
         bronze.load_all_data_to_bronze()
         del bronze
+        return True
+
+    @staticmethod
+    def bronze_revised_aux(args, kwargs):
+        bronze = BronzeRevised()
+        bronze.create_raw_tables()
+        del bronze
+
+    @staticmethod
+    def bronze_revised_load_data_aux(args, kwargs):
+        bronze = BronzeRevised()
+        dict_kwargs = kwargs
+        bronze.load_raw_data_to_bronze(divvy_path=dict_kwargs.get('divvy_path'))
+        del bronze, dict_kwargs
         return True
 
     @staticmethod

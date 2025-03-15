@@ -74,12 +74,12 @@ class SetDeltaTables(Now):
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"STARTING SILVER DELTA TABLE CREATION", start=True, end=True)
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists", start=True)
-            self._spark.sql(f"CREATE DATABASE IF NOT EXISTS silver")
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK", end=True)
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists", start=True)
+            # self._spark.sql(f"CREATE DATABASE IF NOT EXISTS silver")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_bikes_status", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_bikes_status'):
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_bikes_status", start=True)
                 schema = StructType([StructField('bike_id',              StringType(), False),
                                      StructField('vehicle_type_id',      StringType(), True),
                                      StructField('lat',                  DoubleType(), True),
@@ -94,14 +94,14 @@ class SetDeltaTables(Now):
                 brew_silver_df = self._spark.createDataFrame([], schema)
                 brew_silver_df.write.format('delta')\
                               .mode('overwrite')\
-                              .option("overwriteSchema", "True")\
-                              .saveAsTable('silver.divvy_bikes_status')
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_bikes_status | OK", end=True)
+                              .option("overwriteSchema", "True") \
+                              .save(f'./warehouse/silver.db/divvy_bikes_status')
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_bikes_status | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_station_information'):
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information", start=True)
                 schema = StructType([StructField('station_id',           StringType(), False),
                                      StructField('name',                 StringType(), True),
                                      StructField('short_name',           StringType(), True),
@@ -115,13 +115,13 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta')\
                               .mode('overwrite')\
                               .option("overwriteSchema", "True")\
-                              .saveAsTable('silver.divvy_station_information')
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information | OK", end=True)
+                              .save(f'./warehouse/silver.db/divvy_station_information')
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_information | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_status", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_station_status'):
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_status", start=True)
                 schema = StructType([StructField('num_bikes_disabled',          LongType(), True),
                                      StructField('num_docks_disabled',          LongType(), True),
                                      StructField('is_returning',                LongType(), True),
@@ -143,13 +143,13 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta')\
                               .mode('overwrite')\
                               .option("overwriteSchema", "True")\
-                              .saveAsTable('silver.divvy_station_status')
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_status | OK", end=True)
+                              .save(f'./warehouse/silver.db/divvy_station_status')
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_station_status | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_system_pricing_plan", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_system_pricing_plan'):
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_system_pricing_plan", start=True)
                 schema = StructType([StructField('currency',        StringType(), True),
                                      StructField('description',     StringType(), True),
                                      StructField('name',            StringType(), True),
@@ -163,51 +163,51 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta')\
                               .mode('overwrite')\
                               .option("overwriteSchema", "True")\
-                              .saveAsTable('silver.divvy_system_pricing_plan')
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_system_pricing_plan | OK", end=True)
+                              .save(f'./warehouse/silver.db/divvy_system_pricing_plan')
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_system_pricing_plan | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_vehicle_types", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/divvy_vehicle_types'):
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_vehicle_types", start=True)
                 schema = StructType([StructField('form_factor',     StringType(), True),
                                      StructField('propulsion_type', StringType(), True),
                                      StructField('vehicle_type_id', StringType(), True),
-                                     StructField('last_updated',    StringType(), True),])
+                                     StructField('last_updated',    LongType(), True),])
 
                 brew_silver_df = self._spark.createDataFrame([], schema)
                 brew_silver_df.write.format('delta')\
                               .mode('overwrite')\
                               .option("overwriteSchema", "True")\
-                              .saveAsTable('silver.divvy_vehicle_types')
-            self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_vehicle_types | OK", end=True)
+                              .save(f'./warehouse/silver.db/divvy_vehicle_types')
+                self.log_message(show=self._SHOW, message=f"CREATING silver.divvy_vehicle_types | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
         if self._gold:
             print(f"┌{'─' * 118}┐")
-            print(f"│{' ' * 32}                                                    {' ' * 33}│")
-            print(f"│{' ' * 32}                                                    {' ' * 33}│")
-            print(f"│{' ' * 32}   █████████     ███████    █████       ██████████  {' ' * 33}│")
-            print(f"│{' ' * 32}  ███░░░░░███  ███░░░░░███ ░░███       ░░███░░░░███ {' ' * 33}│")
-            print(f"│{' ' * 32} ███     ░░░  ███     ░░███ ░███        ░███   ░░███{' ' * 33}│")
-            print(f"│{' ' * 32}░███         ░███      ░███ ░███        ░███    ░███{' ' * 33}│")
-            print(f"│{' ' * 32}░███    █████░███      ░███ ░███        ░███    ░███{' ' * 33}│")
-            print(f"│{' ' * 32}░░███  ░░███ ░░███     ███  ░███      █ ░███    ███ {' ' * 33}│")
-            print(f"│{' ' * 32} ░░█████████  ░░░███████░   ███████████ ██████████  {' ' * 33}│")
-            print(f"│{' ' * 32}  ░░░░░░░░░     ░░░░░░░    ░░░░░░░░░░░ ░░░░░░░░░░   {' ' * 33}│")
-            print(f"│{' ' * 32}                                                    {' ' * 33}│")
-            print(f"│{' ' * 32}                                                    {' ' * 33}│")
+            print(f"│{' ' * 32}                                                    {' ' * 34}│")
+            print(f"│{' ' * 32}                                                    {' ' * 34}│")
+            print(f"│{' ' * 32}   █████████     ███████    █████       ██████████  {' ' * 34}│")
+            print(f"│{' ' * 32}  ███░░░░░███  ███░░░░░███ ░░███       ░░███░░░░███ {' ' * 34}│")
+            print(f"│{' ' * 32} ███     ░░░  ███     ░░███ ░███        ░███   ░░███{' ' * 34}│")
+            print(f"│{' ' * 32}░███         ░███      ░███ ░███        ░███    ░███{' ' * 34}│")
+            print(f"│{' ' * 32}░███    █████░███      ░███ ░███        ░███    ░███{' ' * 34}│")
+            print(f"│{' ' * 32}░░███  ░░███ ░░███     ███  ░███      █ ░███    ███ {' ' * 34}│")
+            print(f"│{' ' * 32} ░░█████████  ░░░███████░   ███████████ ██████████  {' ' * 34}│")
+            print(f"│{' ' * 32}  ░░░░░░░░░     ░░░░░░░    ░░░░░░░░░░░ ░░░░░░░░░░   {' ' * 34}│")
+            print(f"│{' ' * 32}                                                    {' ' * 34}│")
+            print(f"│{' ' * 32}                                                    {' ' * 34}│")
             print(f"└{'─' * 118}┘")
 
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"STARTING GOLD DELTA TABLE CREATION", start=True, end=True)
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists", start=True)
-            self._spark.sql(f"CREATE DATABASE IF NOT EXISTS gold")
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK", end=True)
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists", start=True)
+            # self._spark.sql(f"CREATE DATABASE IF NOT EXISTS gold")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_bikes_status", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/gold.db/divvy_bikes_status'):
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_bikes_status", start=True)
                 schema = StructType([StructField('bike_id', StringType(), False),
                                      StructField('vehicle_type_id', StringType(), True),
                                      StructField('lat', DoubleType(), True),
@@ -221,13 +221,13 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta') \
                     .mode('overwrite') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable('gold.divvy_bikes_status')
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_bikes_status | OK", end=True)
+                    .save(f'./warehouse/gold.db/divvy_bikes_status')
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_bikes_status | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_information", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/gold.db/divvy_station_information'):
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_information", start=True)
                 schema = StructType([StructField('station_id',           StringType(), False),
                                      StructField('name',                 StringType(), True),
                                      StructField('short_name',           StringType(), True),
@@ -239,13 +239,13 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta') \
                     .mode('overwrite') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable('gold.divvy_station_information')
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_information | OK", end=True)
+                    .save(f'./warehouse/gold.db/divvy_station_information')
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_information | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_status", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/gold.db/divvy_station_status'):
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_status", start=True)
                 schema = StructType([StructField('num_bikes_disabled',          LongType(), True),
                                      StructField('num_docks_disabled',          LongType(), True),
                                      StructField('is_returning',                LongType(), True),
@@ -267,13 +267,13 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta') \
                     .mode('overwrite') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable('gold.divvy_station_status')
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_status | OK", end=True)
+                    .save(f'./warehouse/gold.db/divvy_station_status')
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_station_status | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_system_pricing_plan", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/gold.db/divvy_system_pricing_plan'):
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_system_pricing_plan", start=True)
                 schema = StructType([StructField('currency',        StringType(), True),
                                      StructField('description',     StringType(), True),
                                      StructField('name',            StringType(), True),
@@ -287,24 +287,24 @@ class SetDeltaTables(Now):
                 brew_silver_df.write.format('delta') \
                     .mode('overwrite') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable('gold.divvy_system_pricing_plan')
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_system_pricing_plan | OK", end=True)
+                    .save(f'./warehouse/gold.db/divvy_system_pricing_plan')
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_system_pricing_plan | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_vehicle_types", start=True)
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/gold.db/divvy_vehicle_types'):
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_vehicle_types", start=True)
                 schema = StructType([StructField('form_factor',     StringType(), True),
                                      StructField('propulsion_type', StringType(), True),
                                      StructField('vehicle_type_id', StringType(), True),
-                                     StructField('last_updated',    StringType(), True),])
+                                     StructField('last_updated',    LongType(), True),])
 
                 brew_silver_df = self._spark.createDataFrame([], schema)
                 brew_silver_df.write.format('delta') \
                     .mode('overwrite') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable('gold.divvy_vehicle_types')
-            self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_vehicle_types | OK", end=True)
+                    .save(f'./warehouse/gold.db/divvy_vehicle_types')
+                self.log_message(show=self._SHOW, message=f"CREATING gold.divvy_vehicle_types | OK", end=True)
             # ----------------------------------------------------------------------------------------------------------
 
         # --------------------------------------------------------------------------------------------------------------
@@ -323,11 +323,11 @@ class SetDeltaTables(Now):
             print(f"└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘")
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"\STARTING LOGTABLE DELTA CREATION", start=True, end=True)
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
-            # ----------------------------------------------------------------------------------------------------------
-            self._spark.sql(f"CREATE DATABASE IF NOT EXISTS info")
-            # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
+            # # ----------------------------------------------------------------------------------------------------------
+            # self._spark.sql(f"CREATE DATABASE IF NOT EXISTS info")
+            # # ----------------------------------------------------------------------------------------------------------
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
 
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/info.db/log'):
                 self.log_message(show=self._SHOW, message=f"Creating info.log first time", start=True)
@@ -345,7 +345,7 @@ class SetDeltaTables(Now):
                     .mode('overwrite') \
                     .partitionBy('id') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable("info.log")
+                    .save(f'./warehouse/info.db/log')
                 # ------------------------------------------------------------------------------------------------------
                 self.log_message(show=self._SHOW, message=f"Creating info.log first time | OK", end=True)
                 self.log_message(show=self._SHOW, message=f"LOGTABLE DELTA CREATED", end=True, start=True)
