@@ -156,39 +156,25 @@ class BrewerySilver(Now):
             self.log_message(show=self._SHOW_LOG, message='SAVING DAILY TABLE', start=True)
             df.write\
               .format('delta')\
-              .mode('overwrite')\
+              .mode('append') \
+              .option("overwriteSchema", "True") \
               .option('silver.brewery_daily', '.warehouse/')\
               .partitionBy('date_ref_carga')\
-              .saveAsTable('silver.brewery_daily')
+              .save('./warehouse/silver.db/brewery_daily')
             self.log_message(show=self._SHOW_LOG, message='SAVING DAILY TABLE | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
-            try:
-                brewery_count = self._spark.sql("""SELECT COUNT(*) FROM silver.brewery""").collect()[0][0]
-            except Exception as e:
-                if "Delta table `silver`.`brewery` doesn't exist." in str(e):
-                    self.log_message(show=self._SHOW_LOG, message='SAVING BREWERY TABLE | FIRST EXECUTION', start=True)
-                    df.write \
-                        .format('delta') \
-                        .mode('overwrite') \
-                        .option("overwriteSchema", "True") \
-                        .option('silver.brewery', '.warehouse/') \
-                        .partitionBy('date_ref_carga') \
-                        .saveAsTable('silver.brewery')
-                    self.log_message(show=self._SHOW_LOG, message='SAVING BREWERY TABLE | FIRST EXECUTION | OK',
-                                     end=True)
-                else:
-                    raise(e)
-
-            if self._spark.sql("""SELECT COUNT(*) FROM silver.brewery""").collect()[0][0] == 0:
+            if not DeltaTable.isDeltaTable(self._spark, './warehouse/silver.db/brewery'):
                 self.log_message(show=self._SHOW_LOG, message='SAVING BREWERY TABLE | FIRST EXECUTION', start=True)
-                df.write\
-                  .format('delta')\
-                  .mode('overwrite') \
-                  .option("overwriteSchema", "True") \
-                  .option('silver.brewery', '.warehouse/')\
-                  .partitionBy('date_ref_carga')\
-                  .saveAsTable('silver.brewery')
-                self.log_message(show=self._SHOW_LOG, message='SAVING BREWERY TABLE | FIRST EXECUTION | OK', end=True)
+                df.write \
+                    .format('delta') \
+                    .mode('append') \
+                    .option("overwriteSchema", "True") \
+                    .option('silver.brewery', '.warehouse/') \
+                    .partitionBy('date_ref_carga') \
+                    .save('./warehouse/silver.db/brewery')
+                self.log_message(show=self._SHOW_LOG, message='SAVING BREWERY TABLE | FIRST EXECUTION | OK',
+                                 end=True)
+
             else:
 
                 self.log_message(show=self._SHOW_LOG, message='UPSERT BREWERY TABLE', start=True)
@@ -231,45 +217,45 @@ class BrewerySilver(Now):
                 self.log_message(show=self._SHOW_LOG, message='UPSERT BREWERY TABLE | OK', end=True)
 
         # --------------------------------------------------------------------------------------------------------------
-        else:
-            self.log_message(show=self._SHOW_LOG, message='NO DATA TO BE INSERTED')
-        # --------------------------------------------------------------------------------------------------------------
-        self.log_message(
-            show=self._SHOW_LOG,
-            message='TABLE silver.brewery SUCCESFULLY CREATE AND DATA STORED',
-            start=True, end=True)
-        # --------------------------------------------------------------------------------------------------------------
-        if df.count() > 0:
-            self.log_message(show=self._SHOW_LOG, message='SAVING LOG')
-
-            df_log = self._spark.createDataFrame(
-                [
-                    {
-                        'id': self._START_TIME,
-                        'db': 'silver',
-                        'table': 'brewery',
-                        'rows_inserted': df.count(),
-                        'start_time': self._START_TIME,
-                        'end_time': datetime.now()
-                    }
-                ]
-            )
-
-            df_log = (df_log.withColumn("start_time", col('start_time').cast(TimestampType()))
-                      .withColumn("end_time", col('end_time').cast(TimestampType()))
-                      .withColumn("rows_inserted", col('rows_inserted').cast(IntegerType()))
-                      )
-
-            df_log.write\
-                  .format('delta')\
-                  .mode('append')\
-                  .option('info.log', './warehouse/')\
-                  .saveAsTable('info.log')
-
-            self.log_message(show=self._SHOW_LOG, message='SAVING LOG | OK')
-        # --------------------------------------------------------------------------------------------------------------
-        self.log_message(show=self._SHOW_LOG, message='FINISHING',
-                         start=True, end=True, sep='=')
+        # else:
+        #     self.log_message(show=self._SHOW_LOG, message='NO DATA TO BE INSERTED')
+        # # --------------------------------------------------------------------------------------------------------------
+        # self.log_message(
+        #     show=self._SHOW_LOG,
+        #     message='TABLE silver.brewery SUCCESFULLY CREATE AND DATA STORED',
+        #     start=True, end=True)
+        # # --------------------------------------------------------------------------------------------------------------
+        # if df.count() > 0:
+        #     self.log_message(show=self._SHOW_LOG, message='SAVING LOG')
+        #
+        #     df_log = self._spark.createDataFrame(
+        #         [
+        #             {
+        #                 'id': self._START_TIME,
+        #                 'db': 'silver',
+        #                 'table': 'brewery',
+        #                 'rows_inserted': df.count(),
+        #                 'start_time': self._START_TIME,
+        #                 'end_time': datetime.now()
+        #             }
+        #         ]
+        #     )
+        #
+        #     df_log = (df_log.withColumn("start_time", col('start_time').cast(TimestampType()))
+        #               .withColumn("end_time", col('end_time').cast(TimestampType()))
+        #               .withColumn("rows_inserted", col('rows_inserted').cast(IntegerType()))
+        #               )
+        #
+        #     df_log.write\
+        #           .format('delta')\
+        #           .mode('append')\
+        #           .option('info.log', './warehouse/')\
+        #           .saveAsTable('info.log')
+        #
+        #     self.log_message(show=self._SHOW_LOG, message='SAVING LOG | OK')
+        # # --------------------------------------------------------------------------------------------------------------
+        # self.log_message(show=self._SHOW_LOG, message='FINISHING',
+        #                  start=True, end=True, sep='=')
         # --------------------------------------------------------------------------------------------------------------
 
         self._spark.stop()

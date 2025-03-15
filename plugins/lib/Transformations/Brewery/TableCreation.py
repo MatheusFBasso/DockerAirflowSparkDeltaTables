@@ -71,12 +71,13 @@ class SetDeltaTables(Now):
             print(f"└{'─' * 118}┘")
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"STARTING SILVER DELTA TABLE CREATION", start=True, end=True)
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
             # ----------------------------------------------------------------------------------------------------------
-            self._spark.sql(f"CREATE DATABASE IF NOT EXISTS silver")
+            # self._spark.sql(f"CREATE DATABASE IF NOT EXISTS silver")
             # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
             # ----------------------------------------------------------------------------------------------------------
+
             schema = StructType([
                 StructField('brewery_type', StringType(), True),
                 StructField('city', StringType(), True),
@@ -103,7 +104,7 @@ class SetDeltaTables(Now):
                                        .mode('overwrite')\
                                        .partitionBy('date_ref_carga')\
                                        .option("overwriteSchema", "True")\
-                                       .saveAsTable(table_c)
+                                       .save(f'./warehouse/silver.db/{table_c.split(".")[-1]}')
                     print(f"{table_c} Created successfully!")
                 else:
                     print(f"No need to create table {table_c}")
@@ -129,11 +130,11 @@ class SetDeltaTables(Now):
             print(f"└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘")
             # ----------------------------------------------------------------------------------------------------------
             self.log_message(show=self._SHOW, message=f"\STARTING LOGTABLE DELTA CREATION", start=True, end=True)
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
-            # ----------------------------------------------------------------------------------------------------------
-            self._spark.sql(f"CREATE DATABASE IF NOT EXISTS info")
-            # ----------------------------------------------------------------------------------------------------------
-            self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists")
+            # # ----------------------------------------------------------------------------------------------------------
+            # self._spark.sql(f"CREATE DATABASE IF NOT EXISTS info")
+            # # ----------------------------------------------------------------------------------------------------------
+            # self.log_message(show=self._SHOW, message=f"Creating Database if not exists | OK")
 
             if not DeltaTable.isDeltaTable(self._spark, './warehouse/info.db/log'):
                 self.log_message(show=self._SHOW, message=f"Creating info.log first time", start=True)
@@ -151,7 +152,7 @@ class SetDeltaTables(Now):
                     .mode('overwrite') \
                     .partitionBy('id') \
                     .option("overwriteSchema", "True") \
-                    .saveAsTable("info.log")
+                    .save('./warehouse/info.db/log')
                 # ------------------------------------------------------------------------------------------------------
                 self.log_message(show=self._SHOW, message=f"Creating info.log first time | OK", end=True)
                 self.log_message(show=self._SHOW, message=f"LOGTABLE DELTA CREATED", end=True, start=True)
