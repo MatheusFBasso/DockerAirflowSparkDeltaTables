@@ -32,7 +32,7 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = (self.spark.table('bronze.divvy_free_bike_status')
+        df = (self.spark.read.format('delta').load(f'./warehouse/bronze.db/divvy_free_bike_status')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
               .select(explode('data.bikes').alias('bikes'), 'last_updated').distinct())
@@ -58,8 +58,11 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_bikes_status', start=True)
-        df.write.format('delta')\
-          .insertInto('silver.divvy_bikes_status')
+        (df.write.format('delta')
+          .mode('append')
+          .option('overwriteSchema', 'True')
+          .save('./warehouse/silver.db/divvy_bikes_status')
+        )
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_bikes_status | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
         # LogProcess(spark=self.spark,
@@ -74,7 +77,7 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = (self.spark.table('bronze.divvy_station_information')
+        df = (self.spark.read.format('delta').load(f'./warehouse/bronze.db/divvy_station_information')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
               .select(explode('data.stations').alias('stations'), 'last_updated').distinct())
@@ -97,8 +100,11 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_station_information', start=True)
-        df.write.format('delta')\
-          .insertInto('silver.divvy_station_information')
+        (df.write.format('delta')
+          .mode('append')
+          .option('overwriteSchema', 'True')
+          .save('./warehouse/silver.db/divvy_station_information')
+        )
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_station_information | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
         # LogProcess(spark=self.spark,
@@ -113,7 +119,7 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = (self.spark.table('bronze.divvy_station_status')
+        df = (self.spark.read.format('delta').load(f'./warehouse/bronze.db/divvy_station_status')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
               .select(explode('data.stations').alias('stations'), 'last_updated').distinct())
@@ -146,8 +152,11 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_station_status', start=True)
-        df.write.format('delta')\
-          .insertInto('silver.divvy_station_status')
+        (df.write.format('delta')
+          .mode('append')
+          .option('overwriteSchema', 'True')
+          .save('./warehouse/silver.db/divvy_station_status')
+        )
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_station_status | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
 
@@ -164,7 +173,7 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = (self.spark.table('bronze.divvy_system_pricing_plan')
+        df = (self.spark.read.format('delta').load(f'./warehouse/bronze.db/divvy_system_pricing_plan')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
               .select(explode('data.plans').alias('plans'), 'last_updated').distinct())
@@ -188,8 +197,11 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_system_pricing_plan', start=True)
-        df.write.format('delta')\
-          .insertInto('silver.divvy_system_pricing_plan')
+        (df.write.format('delta')
+          .mode('append')
+          .option('overwriteSchema', 'True')
+          .save('./warehouse/silver.db/divvy_system_pricing_plan')
+        )
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_system_pricing_plan | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
         # LogProcess(spark=self.spark,
@@ -204,7 +216,7 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='READING RAW FILES', start=True)
-        df = (self.spark.table('bronze.divvy_vehicle_types')
+        df = (self.spark.read.format('delta').load(f'./warehouse/bronze.db/divvy_vehicle_types')
               .orderBy(col('last_updated_ts'), ascending=False)
               .limit(1)
               .select(explode('data.vehicle_types').alias('vehicle_types'), 'last_updated').distinct())
@@ -224,8 +236,12 @@ class Silver(Now):
 
         # --------------------------------------------------------------------------------------------------------------
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_vehicle_types', start=True)
-        df.write.format('delta')\
-          .insertInto('silver.divvy_vehicle_types')
+        print(df.printSchema())
+        (df.write.format('delta')
+          .mode('append')
+          .option('overwriteSchema', 'True')
+          .save('./warehouse/silver.db/divvy_vehicle_types')
+        )
         self.log_message(show=self._SHOW_LOG, message='SAVING DATA | silver.divvy_vehicle_types | OK', end=True)
         # --------------------------------------------------------------------------------------------------------------
         # LogProcess(spark=self.spark,
