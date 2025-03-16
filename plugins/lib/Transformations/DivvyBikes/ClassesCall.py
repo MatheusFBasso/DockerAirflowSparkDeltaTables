@@ -4,6 +4,7 @@ from lib.utils.DivvyBikes.CleanRawData import CleanRawData
 from lib.Transformations.DivvyBikes.Bronze import Bronze
 from lib.Transformations.DivvyBikes.BronzeRevised import BronzeRevised
 from lib.Transformations.DivvyBikes.Silver import Silver
+from lib.Transformations.DivvyBikes.SilverRevised import SilverRevised
 from lib.Transformations.DivvyBikes.Gold import Gold
 
 
@@ -23,22 +24,27 @@ class DivvyBikesCall:
 
             'divvy_get_bike_status': cls.get_bike_status_aux,
             'silver_bike_status': cls.silver_bike_status_aux,
+            'silver_revised_bike_status': cls.silver_revised_bike_status_aux,
             'gold_bike_status': cls.gold_bike_status_aux,
 
             'divvy_get_station_information': cls.get_station_info_aux,
             'silver_station_information': cls.silver_station_info_aux,
+            'silver_revised_station_information': cls.silver_revised_station_info_aux,
             'gold_station_information': cls.gold_station_info_aux,
 
             'divvy_get_station_status': cls.get_station_status_aux,
             'silver_station_status': cls.silver_station_status_aux,
+            'silver_revised_station_status': cls.silver_revised_station_status_aux,
             'gold_station_status': cls.gold_station_status_aux,
 
             'divvy_get_system_pricing': cls.get_system_pricing_aux,
             'silver_system_pricing': cls.silver_system_pricing_aux,
+            'silver_revised_system_pricing': cls.silver_revised_system_pricing_aux,
             'gold_system_pricing': cls.gold_system_pricing_aux,
 
             'divvy_get_vehicle_types': cls.get_vehicle_types_aux,
             'silver_vehicle_types': cls.silver_vehicle_types_aux,
+            'silver_revised_vehicle_types': cls.silver_revised_vehicle_types_aux,
             'gold_vehicle_types': cls.gold_vehicle_types_aux,
         }
 
@@ -83,6 +89,10 @@ class DivvyBikesCall:
         return Silver().silver_bike_status()
 
     @staticmethod
+    def silver_revised_bike_status_aux(args, kwargs):
+        return SilverRevised().silver_bike_status()
+
+    @staticmethod
     def gold_bike_status_aux(args, kwargs):
         return Gold().gold_bike_status()
 
@@ -93,6 +103,10 @@ class DivvyBikesCall:
     @staticmethod
     def silver_station_info_aux(args, kwargs):
         return Silver().silver_station_information()
+
+    @staticmethod
+    def silver_revised_station_info_aux(args, kwargs):
+        return SilverRevised().silver_station_information()
 
     @staticmethod
     def gold_station_info_aux(args, kwargs):
@@ -107,6 +121,10 @@ class DivvyBikesCall:
         return Silver().silver_station_status()
 
     @staticmethod
+    def silver_revised_station_status_aux(args, kwargs):
+        return SilverRevised().silver_station_status()
+
+    @staticmethod
     def gold_station_status_aux(args, kwargs):
         return Gold().gold_station_status()
 
@@ -119,6 +137,10 @@ class DivvyBikesCall:
         return Silver().silver_system_pricing_plan()
 
     @staticmethod
+    def silver_revised_system_pricing_aux(args, kwargs):
+        return SilverRevised().silver_system_pricing_plan()
+
+    @staticmethod
     def gold_system_pricing_aux(args, kwats):
         return Gold().gold_system_pricing_plan()
 
@@ -129,6 +151,10 @@ class DivvyBikesCall:
     @staticmethod
     def silver_vehicle_types_aux(args, kwargs):
         return Silver().silver_vehicle_types()
+
+    @staticmethod
+    def silver_revised_vehicle_types_aux(args, kwargs):
+        return SilverRevised().silver_vehicle_types()
 
     @staticmethod
     def gold_vehicle_types_aux(args, kwargs):
