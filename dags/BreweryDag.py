@@ -38,8 +38,8 @@ def brew_gold_type_total():
 # ----------------------------------------------------------------------------------------------------------------------
 with DAG(
     dag_id='BreweryDag',
-    schedule_interval='10 15 * * *',
-    concurrency=2,
+    schedule='10 15 * * *',
+    max_active_tasks=2,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
     tags=['Brewery']
@@ -53,19 +53,19 @@ with DAG(
     brew_extract = PythonOperator(
         task_id='RunBreweryAPI',
         python_callable=brew_exctract_api,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
     move_files_task = PythonOperator(
         task_id='MoveFiles',
         python_callable=brew_clean_raw_data,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
     pre_move_files_task = PythonOperator(
         task_id='PreMoveFiles',
         python_callable=brew_clean_raw_data,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
     brew_silver = PythonOperator(
@@ -76,7 +76,7 @@ with DAG(
     brew_type_total = PythonOperator(
         task_id='GoldBreweryTypeTotal',
         python_callable=brew_gold_type_total,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
 

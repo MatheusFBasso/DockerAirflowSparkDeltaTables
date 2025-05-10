@@ -49,11 +49,10 @@ def pre_divvy_clean_station_status():
 # ----------------------------------------------------------------------------------------------------------------------
 with DAG(
     dag_id='DivvyBikesDailyUpdatesDag',
-    schedule_interval='*/20 * * * *',
-    concurrency=5,
+    schedule='*/20 * * * *',
+    max_active_tasks=5,
     start_date=pendulum.datetime(2024, 2, 10, tz='America/Sao_Paulo'),
     catchup=False,
-    orientation='LR',
     max_active_runs=1,
     description='Divvy Bikes DAG for multi-hop architecture in Spark Delta Tables.',
     # owner_links={"airflow": "https://airflow.apache.org"},
@@ -64,12 +63,12 @@ with DAG(
     divvy_get_bike_status = PythonOperator(
         task_id='GetBikeStatus',
         python_callable=divvy_get_bike_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     bronze_load_bike_status = PythonOperator(
         task_id='BronzeLoadStationStatus',
         python_callable=bronze_load_bike_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
         retries=2,
         show_return_value_in_logs=False,
         retry_delay=5,
@@ -78,7 +77,7 @@ with DAG(
     silver_load_bike_status = PythonOperator(
         task_id='DivvySilverBikeStatus',
         python_callable=silver_load_bike_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
         retries=2,
         show_return_value_in_logs=False,
         retry_delay=5,
@@ -90,18 +89,18 @@ with DAG(
         show_return_value_in_logs=False,
         retry_delay=5,
         priority_weight=1,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     divvy_clean_bike_status = PythonOperator(
         task_id='CleanBikeStatus',
         python_callable=divvy_clean_bike_status,
         priority_weight=1,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     pre_divvy_clean_bike_status = PythonOperator(
         task_id='PreCleanBikeStatus',
         python_callable=pre_divvy_clean_bike_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -109,12 +108,12 @@ with DAG(
     divvy_get_station_status = PythonOperator(
         task_id='GetStationStatus',
         python_callable=divvy_get_station_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     bronze_load_station_status = PythonOperator(
         task_id='BronzeLoadStatusStatus',
         python_callable=bronze_load_station_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
         retries=2,
         show_return_value_in_logs=False,
         retry_delay=5,
@@ -122,7 +121,7 @@ with DAG(
     silver_load_station_status = PythonOperator(
         task_id='SilverLoadStatusStatus',
         python_callable=silver_load_station_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
         retries=2,
         show_return_value_in_logs=False,
     )
@@ -133,18 +132,18 @@ with DAG(
         show_return_value_in_logs=False,
         retry_delay=5,
         priority_weight=2,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     divvy_clean_station_status = PythonOperator(
         task_id='CleanStationStatus',
         python_callable=divvy_clean_station_status,
         priority_weight=4,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     pre_divvy_clean_station_status = PythonOperator(
         task_id='PreCleanStationStatus',
         python_callable=pre_divvy_clean_station_status,
-        task_concurrency=1,
+        max_active_tis_per_dag=1,
     )
     # ------------------------------------------------------------------------------------------------------------------
 
