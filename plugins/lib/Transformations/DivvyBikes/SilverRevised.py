@@ -8,6 +8,7 @@ from pyspark.sql.types import DoubleType, StringType, BooleanType, TimestampType
 class SilverRevised(Now):
 
     _SHOW_LOG = True
+
     _START_TIME = Now().now_datetime()
 
     def __init__(self):
