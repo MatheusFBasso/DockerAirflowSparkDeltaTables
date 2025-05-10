@@ -34,7 +34,7 @@ class BronzeRevised(Now):
         print(f"│{' '*21} ░███    ░███ ░███    ░███ ░░███     ███  ░███  ░░█████   ████     █ ░███ ░   █{' '*18}│")
         print(f"│{' '*21} ███████████  █████   █████ ░░░███████░   █████  ░░█████ ███████████ ██████████{' '*18}│")
         print(f"│{' '*21}░░░░░░░░░░░  ░░░░░   ░░░░░    ░░░░░░░    ░░░░░    ░░░░░ ░░░░░░░░░░░ ░░░░░░░░░░ {' '*18}│")
-        print(f"│{' '*21}                                                                               {' '*18}│")
+        print(f"│{' '*21}                                                          Revised              {' '*18}│")
         print(f"└{'─'*118}┘")
 
 
@@ -46,26 +46,27 @@ class BronzeRevised(Now):
                          start=True)
 
         if not DeltaTable.isDeltaTable(self.spark, f'./warehouse/bronze.db/divvy_bikes'):
+            print('Creating Bronze Table')
 
             (self.spark.read.format('json').load(bronze_path_raw_data + '/' + divvy_path + '/')
              .withColumn('type', lit(divvy_path))
              .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
-             .select('data', 'last_updated', 'ttl', 'version', 'last_updated_ts')
-             .write.format('delta').option("overwriteSchema", "True")
-             .mode('append')
-             .option("mergeSchema", "true")
+             .select('type', 'data', 'last_updated', 'ttl', 'version', 'last_updated_ts')
+             .write.format('delta')
+             .partitionBy('type')
+             .mode('append').option("mergeSchema", "true")
              .save('./warehouse/bronze.db/divvy_bikes'))
 
         else:
+            print('Using Bronze Table')
             df = (self.spark.read.format('json').load(bronze_path_raw_data + '/' + divvy_path + '/')
                        .withColumn('type', lit(divvy_path))
                        .withColumn('last_updated_ts', col('last_updated').cast(TimestampType()))
                        .select('type', 'data', 'last_updated', 'ttl', 'version', 'last_updated_ts'))
 
             (df.write.format('delta')
-                     .mode('append')
+                     .mode('append').option("mergeSchema", "true")
                      .partitionBy('type')
-                     .option("mergeSchema", "true")
                      .save('./warehouse/bronze.db/divvy_bikes'))
 
         self.log_message(show=self._SHOW_LOG,

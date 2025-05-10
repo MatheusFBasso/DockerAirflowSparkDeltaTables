@@ -1,4 +1,4 @@
-FROM apache/airflow:2.10.5-python3.11
+FROM apache/airflow:3.0.0-python3.11
 
 ENV PIP_USER=false
 COPY requirements.txt /requirements.txt

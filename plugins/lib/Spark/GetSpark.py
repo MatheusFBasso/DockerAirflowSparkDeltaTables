@@ -28,7 +28,9 @@ class DeltaSpark(Now):
                  .config('spark.sql.extensions', 'io.delta.sql.DeltaSparkSessionExtension')
                  .config('spark.sql.catalog.spark_catalog', 'org.apache.spark.sql.delta.catalog.DeltaCatalog')
                  .config('spark.sql.warehouse.dir', self._warehouseDir)
-                 # .enableHiveSupport()
+                 .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
+
+        # .enableHiveSupport()
                  )
         # --------------------------------------------------------------------------------------------------------------
         spark = configure_spark_with_delta_pip(builder).getOrCreate()
